@@ -1,0 +1,57 @@
+# Temporary: starts the app with MongoDB, runs the Postman collection, pushes logs to branch smoke-test-results.
+name: Smoke test
+on:
+  push:
+    branches: [smoke-test]
+permissions:
+  contents: write
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          server-id: github-trellis
+          server-username: GITHUB_ACTOR
+          server-password: TRELLIS_PACKAGES_TOKEN
+      - name: Build
+        run: ./mvnw -B -ntp -DskipTests package 2>&1 | tee build.log
+        env:
+          TRELLIS_PACKAGES_TOKEN: ${{ secrets.TRELLIS_PACKAGES_TOKEN }}
+      - name: Start MongoDB replica set
+        run: |
+          docker run -d --name mongo -p 27017:27017 mongo:7.0 --replSet rs0 --bind_ip_all
+          for i in $(seq 1 30); do docker exec mongo mongosh --quiet --eval "1" >/dev/null 2>&1 && break; sleep 2; done
+          docker exec mongo mongosh --quiet --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]})"
+          for i in $(seq 1 30); do [ "$(docker exec mongo mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ] && break; sleep 2; done
+          docker exec mongo mongosh --quiet --eval 'db.hello().isWritablePrimary' | tee mongo.log
+      - name: Start app
+        run: |
+          nohup java -jar target/trellis-app-*.jar > app.log 2>&1 &
+          for i in $(seq 1 90); do curl -fs http://localhost:8080/actuator/health && break; sleep 2; done
+          echo; curl -s http://localhost:8080/actuator/health | tee health.json
+      - name: Run Postman collection
+        run: |
+          cd postman
+          npx -y newman@6 run Trellis.postman_collection.json --reporters cli,json \
+            --reporter-json-export ../newman.json --color off > ../newman.txt 2>&1 || true
+      - name: Dump Mongo collections
+        if: always()
+        run: |
+          docker exec mongo mongosh trellis --quiet --eval '
+            db.getCollectionNames().sort().forEach(c => print(c + ": " + db[c].countDocuments()));
+            print("--- one captured_task_data ---");
+            printjson(db.captured_task_data.findOne({}, {capturedTasks: {full_name: 1, customer_type: 1}, workflowCode: 1, version: 1, workflowCaptureTaskStatus: 1}));
+          ' > mongo-dump.txt 2>&1 || true
+      - name: Push results
+        if: always()
+        run: |
+          mkdir -p /tmp/out && cp -f build.log app.log health.json newman.txt newman.json mongo.log mongo-dump.txt /tmp/out/ 2>/dev/null || true
+          git config user.name github-actions && git config user.email github-actions@users.noreply.github.com
+          git checkout --orphan smoke-test-results && git rm -rqf . && cp /tmp/out/* . && git add -A
+          git commit -qm "Smoke test results ${GITHUB_SHA}" && git push -f origin smoke-test-results
