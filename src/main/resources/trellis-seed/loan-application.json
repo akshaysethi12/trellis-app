@@ -313,64 +313,166 @@
   ],
   "workflows": [
     {
-      "workflowCode": "SAMPLE_ONBOARDING",
-      "name": "Sample onboarding",
-      "description": "Sample workflow covering every Trellis feature",
+      "workflowCode": "LOAN_APPLICATION",
+      "name": "Personal loan application",
+      "description": "Five-page personal loan journey: applicant, employment, loan and EMI, documents, consent",
       "tenantId": "DEFAULT",
       "publish": true,
       "tasks": [
         {
           "taskId": "root",
           "taskType": "ROOT",
-          "parentTaskId": null,
+          "meta": {},
           "childTaskIds": [
-            "profile",
+            "applicant",
+            "employment",
+            "loan",
             "documents",
-            "consent"
-          ],
-          "meta": {}
+            "review"
+          ]
         },
         {
-          "taskId": "profile",
+          "taskId": "applicant",
           "taskType": "SECTION",
           "parentTaskId": "root",
-          "childTaskIds": [
-            "profile_tab"
-          ],
           "meta": {
-            "description": "Profile",
+            "description": "Applicant details",
             "icon": "person"
-          }
+          },
+          "childTaskIds": [
+            "applicant_tab"
+          ]
         },
         {
-          "taskId": "profile_tab",
+          "taskId": "applicant_tab",
           "taskType": "TAB",
-          "parentTaskId": "profile",
+          "parentTaskId": "applicant",
+          "meta": {
+            "description": "Personal details"
+          },
           "childTaskIds": [
             "full_name",
-            "email",
-            "customer_type",
-            "company_name",
+            "mobile_number",
+            "pan_number",
             "city"
-          ],
+          ]
+        },
+        {
+          "taskId": "employment",
+          "taskType": "SECTION",
+          "parentTaskId": "root",
           "meta": {
-            "description": "About you"
-          }
+            "description": "Employment & income",
+            "icon": "work"
+          },
+          "childTaskIds": [
+            "employment_tab"
+          ]
+        },
+        {
+          "taskId": "employment_tab",
+          "taskType": "TAB",
+          "parentTaskId": "employment",
+          "meta": {
+            "description": "Work and income"
+          },
+          "childTaskIds": [
+            "employment_type",
+            "employer_name",
+            "business_name",
+            "monthly_income"
+          ]
+        },
+        {
+          "taskId": "loan",
+          "taskType": "SECTION",
+          "parentTaskId": "root",
+          "meta": {
+            "description": "Loan requirement",
+            "icon": "payments"
+          },
+          "childTaskIds": [
+            "loan_tab"
+          ]
+        },
+        {
+          "taskId": "loan_tab",
+          "taskType": "TAB",
+          "parentTaskId": "loan",
+          "meta": {
+            "description": "Amount and tenure"
+          },
+          "childTaskIds": [
+            "loan_purpose",
+            "loan_amount",
+            "tenure_months",
+            "emi_summary",
+            "co_applicant_count",
+            "co_applicant_1_name",
+            "co_applicant_2_name"
+          ]
+        },
+        {
+          "taskId": "documents",
+          "taskType": "SECTION",
+          "parentTaskId": "root",
+          "meta": {
+            "description": "Documents",
+            "icon": "badge"
+          },
+          "childTaskIds": [
+            "documents_tab"
+          ]
+        },
+        {
+          "taskId": "documents_tab",
+          "taskType": "TAB",
+          "parentTaskId": "documents",
+          "meta": {
+            "description": "Upload documents"
+          },
+          "childTaskIds": [
+            "pan_card_photo",
+            "selfie",
+            "salary_slip",
+            "bank_statement"
+          ]
+        },
+        {
+          "taskId": "review",
+          "taskType": "SECTION",
+          "parentTaskId": "root",
+          "meta": {
+            "description": "Review & consent",
+            "icon": "verified"
+          },
+          "childTaskIds": [
+            "review_tab"
+          ]
+        },
+        {
+          "taskId": "review_tab",
+          "taskType": "TAB",
+          "parentTaskId": "review",
+          "meta": {
+            "description": "Consent"
+          },
+          "childTaskIds": [
+            "terms_consent"
+          ]
         },
         {
           "taskId": "full_name",
           "taskType": "TEXT",
-          "parentTaskId": "profile_tab",
-          "childTaskIds": [],
+          "parentTaskId": "applicant_tab",
           "meta": {
-            "description": "Full name",
+            "description": "Full name (as on PAN)",
             "textBox": {
               "required": true,
               "description": "Your full name",
               "type": "ALPHABETIC"
             }
           },
-          "dependencyBean": "answerSummary",
           "validationHooks": [
             {
               "name": "min-length",
@@ -388,30 +490,29 @@
           ]
         },
         {
-          "taskId": "email",
+          "taskId": "mobile_number",
           "taskType": "TEXT",
-          "parentTaskId": "profile_tab",
-          "childTaskIds": [],
+          "parentTaskId": "applicant_tab",
           "meta": {
-            "description": "Email",
+            "description": "Mobile number",
             "textBox": {
               "required": true,
-              "description": "name@example.com",
-              "type": "ALPHANUMERIC"
+              "description": "10-digit mobile number",
+              "type": "NUMERIC"
             }
           },
           "validationHooks": [
             {
-              "name": "external-check",
+              "name": "mobile-verification",
               "type": "httpValidationHook",
               "taskLifecycleTypes": [
                 "TASK_DATA_CAPTURED"
               ],
               "config": {
-                "url": "${trellis.app.mock-base-url}/mock/validate",
+                "url": "${trellis.app.mock-base-url}/mock/mobile-check",
                 "method": "POST",
                 "requestMappings": {
-                  "value": "${capturedValue.textBox.value}",
+                  "mobile": "${capturedValue.textBox.value}",
                   "assetId": "${assetId}"
                 }
               }
@@ -419,54 +520,34 @@
           ]
         },
         {
-          "taskId": "customer_type",
-          "taskType": "RADIO_BUTTON",
-          "parentTaskId": "profile_tab",
-          "childTaskIds": [],
+          "taskId": "pan_number",
+          "taskType": "TEXT",
+          "parentTaskId": "applicant_tab",
           "meta": {
-            "description": "Customer type",
-            "radioButton": {
+            "description": "PAN",
+            "textBox": {
               "required": true,
-              "options": [
-                "Individual",
-                "Business"
-              ]
+              "description": "ABCDE1234F",
+              "type": "ALPHANUMERIC"
             }
           },
-          "dependencies": [
+          "validationHooks": [
             {
-              "dependentTaskIds": [
-                "company_name"
+              "name": "pan-format",
+              "type": "beanValidationHook",
+              "taskLifecycleTypes": [
+                "TASK_DATA_CAPTURED"
               ],
-              "action": "TASK_VISIBILITY_ACTION",
               "config": {
-                "path": "${capturedValue.radioButton.option}",
-                "dependentValue": "Business",
-                "activate": true
+                "beanName": "panFormatValidator"
               }
             }
           ]
         },
         {
-          "taskId": "company_name",
-          "taskType": "TEXT",
-          "parentTaskId": "profile_tab",
-          "childTaskIds": [],
-          "meta": {
-            "description": "Company name",
-            "textBox": {
-              "required": true,
-              "description": "Registered company name",
-              "type": "ALPHANUMERIC"
-            }
-          },
-          "isActiveByDefault": false
-        },
-        {
           "taskId": "city",
           "taskType": "DROPDOWN",
-          "parentTaskId": "profile_tab",
-          "childTaskIds": [],
+          "parentTaskId": "applicant_tab",
           "meta": {
             "description": "City",
             "dropdown": {
@@ -475,66 +556,202 @@
                 "Bengaluru",
                 "Delhi",
                 "Mumbai",
+                "Hyderabad",
+                "Pune",
                 "Other"
               ]
             }
           }
         },
         {
-          "taskId": "documents",
-          "taskType": "SECTION",
-          "parentTaskId": "root",
-          "childTaskIds": [
-            "documents_tab"
-          ],
+          "taskId": "employment_type",
+          "taskType": "RADIO_BUTTON",
+          "parentTaskId": "employment_tab",
           "meta": {
-            "description": "Documents",
-            "icon": "badge"
-          }
-        },
-        {
-          "taskId": "documents_tab",
-          "taskType": "TAB",
-          "parentTaskId": "documents",
-          "childTaskIds": [
-            "id_photo",
-            "contacts_count",
-            "contact_1_name",
-            "contact_2_name"
-          ],
-          "meta": {
-            "description": "Upload"
-          }
-        },
-        {
-          "taskId": "id_photo",
-          "taskType": "IMAGE",
-          "parentTaskId": "documents_tab",
-          "childTaskIds": [],
-          "meta": {
-            "description": "ID photo",
-            "image": {
+            "description": "Employment type",
+            "radioButton": {
               "required": true,
               "options": [
-                {
-                  "hashKey": "id_front",
-                  "description": "Front of ID",
-                  "required": true,
-                  "sideEffectBeans": [
-                    "logSideEffect"
-                  ]
+                "Salaried",
+                "Self-employed"
+              ]
+            }
+          },
+          "dependencies": [
+            {
+              "dependentTaskIds": [
+                "employer_name",
+                "salary_slip"
+              ],
+              "action": "TASK_VISIBILITY_ACTION",
+              "config": {
+                "path": "${capturedValue.radioButton.option}",
+                "dependentValue": "Salaried",
+                "activate": true
+              }
+            },
+            {
+              "dependentTaskIds": [
+                "business_name",
+                "bank_statement"
+              ],
+              "action": "TASK_VISIBILITY_ACTION",
+              "config": {
+                "path": "${capturedValue.radioButton.option}",
+                "dependentValue": "Self-employed",
+                "activate": true
+              }
+            }
+          ]
+        },
+        {
+          "taskId": "employer_name",
+          "taskType": "TEXT",
+          "parentTaskId": "employment_tab",
+          "meta": {
+            "description": "Employer name",
+            "textBox": {
+              "required": true,
+              "description": "Company you work for",
+              "type": "ALPHANUMERIC"
+            }
+          },
+          "isActiveByDefault": false
+        },
+        {
+          "taskId": "business_name",
+          "taskType": "TEXT",
+          "parentTaskId": "employment_tab",
+          "meta": {
+            "description": "Business name",
+            "textBox": {
+              "required": true,
+              "description": "Registered business name",
+              "type": "ALPHANUMERIC"
+            }
+          },
+          "isActiveByDefault": false
+        },
+        {
+          "taskId": "monthly_income",
+          "taskType": "TEXT",
+          "parentTaskId": "employment_tab",
+          "meta": {
+            "description": "Monthly income (Rs)",
+            "textBox": {
+              "required": true,
+              "description": "Take-home pay per month",
+              "type": "NUMERIC"
+            }
+          },
+          "validationHooks": [
+            {
+              "name": "income-range",
+              "type": "beanValidationHook",
+              "taskLifecycleTypes": [
+                "TASK_DATA_CAPTURED"
+              ],
+              "config": {
+                "beanName": "numberRangeValidator",
+                "metadata": {
+                  "min": 15000,
+                  "max": 10000000,
+                  "label": "Monthly income"
                 }
+              }
+            }
+          ]
+        },
+        {
+          "taskId": "loan_purpose",
+          "taskType": "DROPDOWN",
+          "parentTaskId": "loan_tab",
+          "meta": {
+            "description": "Purpose of the loan",
+            "dropdown": {
+              "required": true,
+              "options": [
+                "Home renovation",
+                "Education",
+                "Medical",
+                "Wedding",
+                "Travel",
+                "Vehicle purchase",
+                "Other"
               ]
             }
           }
         },
         {
-          "taskId": "contacts_count",
-          "taskType": "DROPDOWN",
-          "parentTaskId": "documents_tab",
-          "childTaskIds": [],
+          "taskId": "loan_amount",
+          "taskType": "TEXT",
+          "parentTaskId": "loan_tab",
           "meta": {
-            "description": "Number of emergency contacts",
+            "description": "Loan amount (Rs)",
+            "textBox": {
+              "required": true,
+              "description": "Between 50,000 and 25,00,000",
+              "type": "NUMERIC"
+            }
+          },
+          "dependencyBean": "emiCalculator",
+          "validationHooks": [
+            {
+              "name": "amount-range",
+              "type": "beanValidationHook",
+              "taskLifecycleTypes": [
+                "TASK_DATA_CAPTURED"
+              ],
+              "config": {
+                "beanName": "numberRangeValidator",
+                "metadata": {
+                  "min": 50000,
+                  "max": 2500000,
+                  "label": "Loan amount"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "taskId": "tenure_months",
+          "taskType": "DROPDOWN",
+          "parentTaskId": "loan_tab",
+          "meta": {
+            "description": "Tenure",
+            "dropdown": {
+              "required": true,
+              "options": [
+                "12 months",
+                "24 months",
+                "36 months",
+                "48 months",
+                "60 months"
+              ]
+            }
+          },
+          "dependencyBean": "emiCalculator"
+        },
+        {
+          "taskId": "emi_summary",
+          "taskType": "TEXT",
+          "parentTaskId": "loan_tab",
+          "meta": {
+            "description": "Your EMI",
+            "textBox": {
+              "required": false,
+              "description": "Calculated from amount and tenure",
+              "type": "ALPHANUMERIC"
+            }
+          },
+          "isSystemInput": true
+        },
+        {
+          "taskId": "co_applicant_count",
+          "taskType": "DROPDOWN",
+          "parentTaskId": "loan_tab",
+          "meta": {
+            "description": "Number of co-applicants",
             "dropdown": {
               "required": true,
               "options": [
@@ -547,8 +764,8 @@
           "dependencies": [
             {
               "dependentTaskIds": [
-                "contact_1_name",
-                "contact_2_name"
+                "co_applicant_1_name",
+                "co_applicant_2_name"
               ],
               "action": "NUMERIC_TASK_ACTIVATION_ACTION",
               "config": {
@@ -558,12 +775,11 @@
           ]
         },
         {
-          "taskId": "contact_1_name",
+          "taskId": "co_applicant_1_name",
           "taskType": "TEXT",
-          "parentTaskId": "documents_tab",
-          "childTaskIds": [],
+          "parentTaskId": "loan_tab",
           "meta": {
-            "description": "Contact 1 name",
+            "description": "Co-applicant 1 name",
             "textBox": {
               "required": true,
               "description": "Full name",
@@ -573,12 +789,11 @@
           "isActiveByDefault": false
         },
         {
-          "taskId": "contact_2_name",
+          "taskId": "co_applicant_2_name",
           "taskType": "TEXT",
-          "parentTaskId": "documents_tab",
-          "childTaskIds": [],
+          "parentTaskId": "loan_tab",
           "meta": {
-            "description": "Contact 2 name",
+            "description": "Co-applicant 2 name",
             "textBox": {
               "required": true,
               "description": "Full name",
@@ -588,45 +803,107 @@
           "isActiveByDefault": false
         },
         {
-          "taskId": "consent",
-          "taskType": "SECTION",
-          "parentTaskId": "root",
-          "childTaskIds": [
-            "consent_tab"
-          ],
+          "taskId": "pan_card_photo",
+          "taskType": "IMAGE",
+          "parentTaskId": "documents_tab",
+          "meta": {
+            "description": "PAN card",
+            "image": {
+              "required": true,
+              "options": [
+                {
+                  "hashKey": "pan_front",
+                  "description": "Front of PAN card",
+                  "required": true,
+                  "sideEffectBeans": [
+                    "documentCheck"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "taskId": "selfie",
+          "taskType": "IMAGE",
+          "parentTaskId": "documents_tab",
+          "meta": {
+            "description": "Selfie",
+            "image": {
+              "required": true,
+              "options": [
+                {
+                  "hashKey": "selfie",
+                  "description": "A clear photo of your face",
+                  "required": true,
+                  "sideEffectBeans": [
+                    "documentCheck"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "taskId": "salary_slip",
+          "taskType": "IMAGE",
+          "parentTaskId": "documents_tab",
+          "meta": {
+            "description": "Latest salary slip",
+            "image": {
+              "required": true,
+              "options": [
+                {
+                  "hashKey": "salary_slip_1",
+                  "description": "Last month's salary slip",
+                  "required": true,
+                  "sideEffectBeans": [
+                    "documentCheck"
+                  ]
+                }
+              ]
+            }
+          },
+          "isActiveByDefault": false
+        },
+        {
+          "taskId": "bank_statement",
+          "taskType": "IMAGE",
+          "parentTaskId": "documents_tab",
+          "meta": {
+            "description": "Bank statement",
+            "image": {
+              "required": true,
+              "options": [
+                {
+                  "hashKey": "bank_statement_1",
+                  "description": "Last 6 months' bank statement",
+                  "required": true,
+                  "sideEffectBeans": [
+                    "documentCheck"
+                  ]
+                }
+              ]
+            }
+          },
+          "isActiveByDefault": false
+        },
+        {
+          "taskId": "terms_consent",
+          "taskType": "CHECKBOX",
+          "parentTaskId": "review_tab",
           "meta": {
             "description": "Consent",
-            "icon": "verified"
-          }
-        },
-        {
-          "taskId": "consent_tab",
-          "taskType": "TAB",
-          "parentTaskId": "consent",
-          "childTaskIds": [
-            "terms"
-          ],
-          "meta": {
-            "description": "Terms"
-          }
-        },
-        {
-          "taskId": "terms",
-          "taskType": "CHECKBOX",
-          "parentTaskId": "consent_tab",
-          "childTaskIds": [],
-          "meta": {
-            "description": "Terms",
             "checkbox": {
               "required": true,
               "options": [
-                "I accept the terms"
+                "I agree to the loan terms and allow a credit bureau check"
               ]
             }
           },
           "hooks": [
             {
-              "name": "terms-webhook",
+              "name": "consent-webhook",
               "type": "httpHook",
               "async": false,
               "taskLifecycleTypes": [
@@ -634,29 +911,32 @@
               ],
               "executionCondition": "['taskStatus'] == 'COMPLETED'",
               "config": {
-                "url": "${trellis.app.mock-base-url}/mock/webhooks/terms-accepted",
+                "url": "${trellis.app.mock-base-url}/mock/webhooks/consent-given",
                 "method": "POST",
                 "headers": {
                   "X-Source": "trellis"
                 },
                 "requestMappings": {
-                  "event": "TERMS_ACCEPTED",
+                  "event": "CONSENT_GIVEN",
                   "assetId": "${assetId}",
                   "workflowCode": "${workflowCode}",
-                  "name": "${capturedTaskData.capturedTasks.full_name.capturedValue.textBox.value}",
-                  "answer": "${capturedValue.checkbox}"
+                  "applicantName": "${capturedTaskData.capturedTasks.full_name.capturedValue.textBox.value}",
+                  "loanAmount": "${capturedTaskData.capturedTasks.loan_amount.capturedValue.textBox.value}",
+                  "emiSummary": "${capturedTaskData.capturedTasks.emi_summary.capturedValue.textBox.value}",
+                  "consent": "${capturedValue.checkbox}"
                 }
               }
             },
             {
-              "name": "terms-echo",
+              "name": "credit-check",
               "type": "beanHook",
               "async": true,
               "taskLifecycleTypes": [
                 "TASK_DATA_CAPTURED"
               ],
+              "executionCondition": "['taskStatus'] == 'COMPLETED'",
               "config": {
-                "beanName": "echoHook"
+                "beanName": "creditCheckRequest"
               }
             }
           ]

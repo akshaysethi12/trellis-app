@@ -1,4 +1,5 @@
-# Local dependencies for Trellis: MongoDB (single-node replica set, needed for transactions) and mongo-express.
+# Local dependency for trellis-app: MongoDB as a single-node replica set (needed for transactions).
+# Browse the data with MongoDB Compass: mongodb://localhost:27017/?directConnection=true
 services:
   mongo:
     image: mongo:7.0
@@ -15,18 +16,6 @@ services:
       timeout: 10s
       retries: 30
       start_period: 5s
-
-  mongo-express:
-    image: mongo-express:1.0.2
-    container_name: trellis-mongo-express
-    depends_on:
-      mongo:
-        condition: service_healthy
-    ports:
-      - "8081:8081"
-    environment:
-      ME_CONFIG_MONGODB_URL: mongodb://mongo:27017/?directConnection=true
-      ME_CONFIG_BASICAUTH: "false"
 
 volumes:
   trellis-mongo-data:
