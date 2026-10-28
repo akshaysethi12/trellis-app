@@ -2695,22 +2695,21 @@
           ]
         },
         {
-          "name": "Upload file to URL (choose a file in Body)",
+          "name": "Upload a file to the URL",
           "request": {
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
-                "value": "image/jpeg"
+                "value": "text/plain"
               }
             ],
             "body": {
-              "mode": "file",
-              "file": {}
+              "mode": "raw",
+              "raw": "sample file content for {{assetId}}"
             },
-            "url": {
-              "raw": "{{uploadUrl}}"
-            }
+            "url": "{{uploadUrl}}",
+            "description": "Uploads a small text body so the request runs unattended. To upload a real image, switch Body to 'binary', pick a file and set Content-Type to image/jpeg."
           },
           "event": [
             {
@@ -2749,7 +2748,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 200 or 404', () => pm.expect([200, 404]).to.include(pm.response.code));"
+                  "pm.test('status is 200', () => pm.expect(pm.response.code).to.eql(200));"
                 ]
               }
             }

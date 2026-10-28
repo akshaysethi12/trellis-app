@@ -12,6 +12,7 @@ external services, so you can try the whole engine end to end.
 - JDK 21 (`java -version`)
 - Docker Desktop (for MongoDB)
 - A GitHub personal access token (classic) with the `read:packages` scope, to download Trellis from GitHub Packages
+- [MongoDB Compass](https://www.mongodb.com/products/compass) (optional, to browse the data): `brew install --cask mongodb-compass`
 - Postman (optional, for the API collection)
 
 Maven is not needed; `./mvnw` downloads it.
@@ -42,7 +43,7 @@ repository secret named `TRELLIS_PACKAGES_TOKEN` containing a classic token with
 ## Start
 
 ```bash
-docker compose up -d                 # MongoDB 7 as replica set rs0 on :27017, mongo-express on :8081
+docker compose up -d                 # MongoDB 7 as replica set rs0 on :27017
 docker compose ps                    # wait until trellis-mongo shows "healthy"
 ./mvnw spring-boot:run               # downloads Trellis, starts on http://localhost:8080
 ```
@@ -54,11 +55,21 @@ On startup the seed loader creates 8 task types and publishes the `SAMPLE_ONBOAR
 |---|---|
 | http://localhost:8080/actuator/health | Health check |
 | http://localhost:8080/swagger-ui.html | Every endpoint, with "Try it out" |
-| http://localhost:8081 | mongo-express: browse the `trellis` database |
 | http://localhost:8080/mock/webhooks | Webhooks the sample workflow sent |
 
-MongoDB must be a replica set because publishing a workflow runs in a transaction. To use a standalone `mongod`
-instead, remove `?replicaSet=rs0` from `spring.data.mongodb.uri` and set `trellis.mongo.transactions-enabled: false`.
+To browse the data, open MongoDB Compass and connect to `mongodb://localhost:27017/?directConnection=true`, then open
+the `trellis` database. Keep `directConnection=true`: it tells Compass to talk to this one node instead of looking for
+other replica set members.
+
+MongoDB must be a replica set because publishing a workflow runs in a transaction. Without Docker, install MongoDB
+with Homebrew and enable the replica set:
+
+```bash
+brew tap mongodb/brew && brew install mongodb-community@7.0
+printf '\nreplication:\n  replSetName: rs0\n' >> /opt/homebrew/etc/mongod.conf
+brew services start mongodb-community@7.0
+mongosh --eval "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]})"
+```
 
 ## Trellis version
 
@@ -123,7 +134,7 @@ The example beans are in `src/main/java/io/trellis/app/examples`.
 |---|---|---|
 | `server.port` | `8080` | HTTP port |
 | `spring.data.mongodb.uri` | `mongodb://localhost:27017/trellis?replicaSet=rs0&directConnection=true` | Mongo connection |
-| `trellis.mongo.transactions-enabled` | `true` | `false` for a standalone mongod |
+| `trellis.mongo.transactions-enabled` | `true` | Keep `true`: publishing a workflow is transactional and fails without a transaction manager |
 | `trellis.runtime.default-tenant` | `DEFAULT` | Used when no `tenantId` header is sent |
 | `trellis.runtime.seed.enabled` | `true` | Load `trellis-seed/*.json` on startup |
 | `trellis.runtime.media.local-dir` | `./data/media` | Where uploaded files are stored (`TRELLIS_MEDIA_DIR`) |
