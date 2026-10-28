@@ -35,6 +35,10 @@ doesn't exist; [`settings.example.xml`](settings.example.xml) has the full file)
 
 The `id` must match the `<repository>` id in `pom.xml`.
 
+**CI** needs the same kind of token: in this repository go to *Settings → Secrets and variables → Actions* and add a
+repository secret named `TRELLIS_PACKAGES_TOKEN` containing a classic token with `read:packages`. The built-in
+`GITHUB_TOKEN` can't be used because Maven packages on GitHub can only be read by their own repository's workflows.
+
 ## Start
 
 ```bash
