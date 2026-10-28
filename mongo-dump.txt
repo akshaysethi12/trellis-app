@@ -1,0 +1,15 @@
+captured_task_data: 1
+captured_task_data_auditing: 1
+graph_info: 1
+mock_webhooks: 1
+task_types: 9
+workflow_tasks: 34
+workflows: 4
+--- one captured_task_data ---
+{
+  _id: ObjectId('6ae1ce04b27829f6c22e2cd8'),
+  workflowCode: 'SAMPLE_ONBOARDING',
+  version: 2,
+  capturedTasks: {},
+  workflowCaptureTaskStatus: 'NOT_STARTED'
+}

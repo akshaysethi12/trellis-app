@@ -1,0 +1,422 @@
+npm warn deprecated har-validator@5.1.5: this library is no longer supported
+npm warn deprecated uuid@3.4.0: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+npm warn deprecated uuid@8.3.2: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+npm warn deprecated @faker-js/faker@5.5.3: Please update to a newer version.
+(node:3044) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Trellis
+
+❏ 1. Health
+↳ Health
+  GET http://localhost:8080/actuator/health [200 OK, 207B, 31ms]
+  ✓  status is 200
+  ✓  UP
+
+↳ OpenAPI spec
+  GET http://localhost:8080/v3/api-docs [200 OK, 42.18kB, 1182ms]
+  ✓  status is 200
+
+❏ 2. Task types
+↳ Upsert all task types
+  PUT http://localhost:8080/task-types/all [200 OK, 3.87kB, 58ms]
+  ✓  status is 200
+
+↳ List task types
+  GET http://localhost:8080/task-types [200 OK, 3.87kB, 20ms]
+  ✓  status is 200
+
+↳ Get task type
+  GET http://localhost:8080/task-types/TEXT [200 OK, 689B, 11ms]
+  ✓  status is 200
+
+↳ Create task type
+  POST http://localhost:8080/task-types [201 Created, 564B, 12ms]
+  ✓  status is 201
+
+↳ Update task type (updatedBy)
+  PUT http://localhost:8080/task-types/TEXT [200 OK, 684B, 14ms]
+  ✓  status is 200
+
+❏ 3. Workflows (read)
+↳ Latest published SAMPLE_ONBOARDING
+  GET http://localhost:8080/workflows/SAMPLE_ONBOARDING/latest-published [200 OK, 260B, 11ms]
+  ✓  status is 200
+  ✓  has workflowId
+
+↳ Expanded workflow (tree)
+  GET http://localhost:8080/workflows/6ae1cdf3b27829f6c22e2c9f [200 OK, 10.87kB, 36ms]
+  ✓  status is 200
+
+↳ All tasks (flat)
+  GET http://localhost:8080/workflows/6ae1cdf3b27829f6c22e2c9f/tasks [200 OK, 12.03kB, 27ms]
+  ✓  status is 200
+
+↳ Full task hierarchy
+  GET http://localhost:8080/workflows/6ae1cdf3b27829f6c22e2c9f/tasks/full [200 OK, 10.42kB, 15ms]
+  ✓  status is 200
+
+↳ Children of a task
+  GET http://localhost:8080/workflows/6ae1cdf3b27829f6c22e2c9f/tasks/expanded?parentTaskId=profile_tab [200 OK, 3.68kB, 41ms]
+  ✓  status is 200
+
+↳ Single task
+  GET http://localhost:8080/workflows/6ae1cdf3b27829f6c22e2c9f/tasks/full_name [200 OK, 917B, 11ms]
+  ✓  status is 200
+
+↳ List workflows (latest versions)
+  GET http://localhost:8080/workflows?pageNumber=0&pageSize=10&published=true [200 OK, 717B, 96ms]
+  ✓  status is 200
+
+↳ All workflows (every version)
+  GET http://localhost:8080/workflows/all [200 OK, 656B, 8ms]
+  ✓  status is 200
+
+↳ Versions of a workflow code
+  GET http://localhost:8080/workflows/SAMPLE_ONBOARDING/versions?pageNumber=0&pageSize=10 [200 OK, 717B, 11ms]
+  ✓  status is 200
+
+↳ Workflow meta by id
+  POST http://localhost:8080/workflows/meta [200 OK, 260B, 6ms]
+  ✓  status is 200
+
+↳ Export workflow tasks (JSON)
+  GET http://localhost:8080/workflows/export?workflowId=6ae1cdf3b27829f6c22e2c9f [200 OK, 15.37kB, 26ms]
+  ✓  status is 200
+
+❏ 4. Build a workflow
+↳ 1. Create empty draft workflow
+  POST http://localhost:8080/workflows/empty [201 Created, 613B, 24ms]
+  ✓  status is 201
+
+↳ 2. Save task tree (saveAll)
+  POST http://localhost:8080/workflows/6ae1ce03b27829f6c22e2cb1/tasks/saveAll [200 OK, 3.07kB, 31ms]
+  ✓  status is 200
+
+↳ 3. Create one more task
+  POST http://localhost:8080/workflows/6ae1ce03b27829f6c22e2cb1/tasks [201 Created, 719B, 31ms]
+  ✓  status is 201
+
+↳ 4. Attach task to parent
+  PUT http://localhost:8080/workflows/manage/tasks [200 OK, 165B, 21ms]
+  ✓  status is 200
+
+↳ 5. Update a task
+  PUT http://localhost:8080/workflows/6ae1ce03b27829f6c22e2cb1/tasks/nickname [200 OK, 736B, 14ms]
+  ✓  status is 200
+
+↳ 6. Clone a task
+  POST http://localhost:8080/workflows/6ae1ce03b27829f6c22e2cb1/tasks/cloneTask [201 Created, 818B, 14ms]
+  ✓  status is 201
+
+↳ 7. Delete the clone
+  DELETE http://localhost:8080/workflows/6ae1ce03b27829f6c22e2cb1/tasks/nickname_copy [204 No Content, 112B, 19ms]
+  ✓  status is 204
+
+↳ 8. View tree
+  GET http://localhost:8080/workflows/6ae1ce03b27829f6c22e2cb1/tasks/full [200 OK, 2.81kB, 9ms]
+  ✓  status is 200
+
+↳ 9. Save designer layout (graph-info)
+  PUT http://localhost:8080/workflows/graph-info [200 OK, 452B, 26ms]
+  ✓  status is 200
+
+↳ 10. Read designer layout
+  GET http://localhost:8080/workflows/graph-info?workflowId=6ae1ce03b27829f6c22e2cb1 [200 OK, 440B, 8ms]
+  ✓  status is 200
+
+↳ 11. Publish (role header required)
+  PUT http://localhost:8080/workflows/6ae1ce03b27829f6c22e2cb1/publish [200 OK, 195B, 22ms]
+  ✓  status is 200
+
+↳ 12. Publish without role (expect 403)
+  PUT http://localhost:8080/workflows/6ae1ce03b27829f6c22e2cb1/publish [403 Forbidden, 437B, 23ms]
+  ✓  rejected
+
+↳ 13. Start an edit (creates a draft copy)
+  POST http://localhost:8080/workflows/6ae1ce03b27829f6c22e2cb1/modify [200 OK, 3.74kB, 46ms]
+  ✓  status is 200
+
+↳ 14. Change a task in the edit draft
+  PUT http://localhost:8080/workflows/6ae1ce03b27829f6c22e2cb9/tasks/agree [200 OK, 710B, 25ms]
+  ✓  status is 200
+
+↳ 15. Diff draft vs published
+  GET http://localhost:8080/workflows/6ae1ce03b27829f6c22e2cb9/diff [200 OK, 606B, 29ms]
+  ✓  status is 200
+
+↳ 16. Publish the edit as a new version
+  PUT http://localhost:8080/workflows/6ae1ce03b27829f6c22e2cb9/publish?newVersion=true [200 OK, 195B, 11ms]
+  ✓  status is 200
+
+↳ 17. Versions of the new code
+  GET http://localhost:8080/workflows/DEMO_1793183235/versions?pageNumber=0&pageSize=10 [200 OK, 1.17kB, 7ms]
+  ✓  status is 200
+
+↳ 18. Copy SAMPLE_ONBOARDING into a new workflow
+  POST http://localhost:8080/workflows/copyWorkflow?sourceWorkflowId=6ae1cdf3b27829f6c22e2c9f [201 Created, 12.25kB, 23ms]
+  ✓  status is 201
+
+↳ 19. Delete the copy
+  DELETE http://localhost:8080/workflows/6ae1ce04b27829f6c22e2cc0 [200 OK, 180B, 43ms]
+  ✓  status is 200
+
+↳ 20. Import tasks from a JSON file (pick postman/sample-import-tasks.json)
+  POST http://localhost:8080/workflows/import (node:3044) [DEP0044] DeprecationWarning: The `util.isArray` API is deprecated. Please use `Array.isArray()` instead.
+[200 OK, 182B, 53ms]
+  ✓  status is 200
+
+❏ 5. Execute a workflow
+↳ Start a new asset (sets assetId)
+  ┌
+  │ 'assetId =', 'ASSET-1793183236208'
+  └
+  GET http://localhost:8080/actuator/health [200 OK, 207B, 7ms]
+  ✓  status is 200
+
+↳ Get task tree (creates the execution)
+  POST http://localhost:8080/api/v1/sdk/workflow/full-hierarchy?assetId=ASSET-1793183236208&workflowId=SAMPLE_ONBOARDING [200 OK, 7kB, 56ms]
+  ✓  status is 200
+  ✓  has tasks
+  ✓  NOT_STARTED or IN_PROGRESS
+
+↳ Reject: empty answer (Java validator)
+  PUT http://localhost:8080/api/v1/sdk/workflow/update [400 Bad Request, 326B, 16ms]
+  ✓  status is 400
+
+↳ Reject: name too short (beanValidationHook)
+  PUT http://localhost:8080/api/v1/sdk/workflow/update [422 Unprocessable Entity (WebDAV) (RFC 4918), 376B, 12ms]
+  ✓  status is 422
+
+↳ Reject: email fails external check (httpValidationHook)
+  PUT http://localhost:8080/api/v1/sdk/workflow/update [422 Unprocessable Entity (WebDAV) (RFC 4918), 418B, 132ms]
+  ✓  status is 422
+
+↳ Full name
+  PUT http://localhost:8080/api/v1/sdk/workflow/update [500 Internal Server Error, 477B, 13ms]
+  1. status is 200
+  2. COMPLETED
+
+↳ Email
+  PUT http://localhost:8080/api/v1/sdk/workflow/update [500 Internal Server Error, 469B, 19ms]
+  3. status is 200
+
+↳ Customer type = Business (shows company_name)
+  PUT http://localhost:8080/api/v1/sdk/workflow/update [500 Internal Server Error, 501B, 14ms]
+  4. status is 200
+  5⠄ TypeError in test-script
+
+↳ Company name
+  PUT http://localhost:8080/api/v1/sdk/workflow/update [500 Internal Server Error, 483B, 11ms]
+  6. status is 200
+
+↳ City
+  PUT http://localhost:8080/api/v1/sdk/workflow/update [500 Internal Server Error, 475B, 10ms]
+  7. status is 200
+
+↳ ID photo (runs logSideEffect)
+  PUT http://localhost:8080/api/v1/sdk/workflow/update [500 Internal Server Error, 477B, 12ms]
+  8. status is 200
+
+↳ Contacts count = 1 (activates 1 of 2)
+  PUT http://localhost:8080/api/v1/sdk/workflow/update [500 Internal Server Error, 495B, 11ms]
+  9. status is 200
+ 10. contact_1 on, contact_2 off
+
+↳ Contact 1 name
+  PUT http://localhost:8080/api/v1/sdk/workflow/update [500 Internal Server Error, 487B, 11ms]
+ 11. status is 200
+
+↳ Submit too early (lists missing tasks)
+  PUT http://localhost:8080/api/v1/sdk/workflow/submit?assetId=ASSET-1793183236208&workflowId=SAMPLE_ONBOARDING [200 OK, 3.28kB, 18ms]
+  ✓  status is 200
+  ✓  not submitted
+  ✓  terms missing
+
+↳ Accept terms (fires httpHook + async beanHook)
+  PUT http://localhost:8080/api/v1/sdk/workflow/update [500 Internal Server Error, 477B, 12ms]
+ 12. status is 200
+
+↳ Check the webhook arrived
+  GET http://localhost:8080/mock/webhooks?channel=terms-accepted [200 OK, 166B, 5ms]
+  ✓  status is 200
+ 13. webhook for this asset
+
+↳ Get task tree (with answers)
+  POST http://localhost:8080/api/v1/sdk/workflow/full-hierarchy?assetId=ASSET-1793183236208&workflowId=SAMPLE_ONBOARDING [200 OK, 7kB, 10ms]
+  ✓  status is 200
+
+↳ Submit
+  PUT http://localhost:8080/api/v1/sdk/workflow/submit?assetId=ASSET-1793183236208&workflowId=SAMPLE_ONBOARDING [200 OK, 3.28kB, 12ms]
+  ✓  status is 200
+ 14. submitted
+
+↳ Edit after submit (expect 409)
+  PUT http://localhost:8080/api/v1/sdk/workflow/update [500 Internal Server Error, 475B, 11ms]
+ 15. status is 409
+
+↳ Reset (archives v1, starts v2)
+  PUT http://localhost:8080/api/v1/sdk/workflow/reset?assetId=ASSET-1793183236208&workflowId=SAMPLE_ONBOARDING [200 OK, 7kB, 37ms]
+  ✓  status is 200
+  ✓  version 2
+
+↳ Read archived version 1
+  GET http://localhost:8080/api/v1/sdk/workflow/version-snapshot?assetId=ASSET-1793183236208&workflowId=SAMPLE_ONBOARDING&version=1 [200 OK, 7kB, 24ms]
+  ✓  status is 200
+  ✓  read-only
+
+↳ Get task tree (GET variant)
+  GET http://localhost:8080/api/v1/sdk/workflow/full-hierarchy?assetId=ASSET-1793183236208&workflowId=SAMPLE_ONBOARDING [200 OK, 7kB, 16ms]
+  ✓  status is 200
+
+❏ 6. Media
+↳ Get upload URL
+  POST http://localhost:8080/api/v1/media/signed-url [200 OK, 350B, 5ms]
+  ✓  status is 200
+
+↳ Upload file to URL (choose a file in Body)
+  ┌
+  │ 'Binary file load error: invalid or missing file sourc
+  │ e'
+  └
+  PUT  [errored]
+     runtime:extensions~request: request url is empty
+ 17. status is 200
+
+↳ Download the file
+  GET http://localhost:8080/api/v1/media/files/trellis/ASSET-1793183236208/id_photo/id_front_id_front.jpg [404 Not Found, 152B, 12ms]
+  ✓  status is 200 or 404
+
+❏ 7. Mock services
+↳ List received webhooks
+  GET http://localhost:8080/mock/webhooks [200 OK, 166B, 7ms]
+  ✓  status is 200
+
+↳ Clear received webhooks
+  DELETE http://localhost:8080/mock/webhooks [200 OK, 177B, 6ms]
+  ✓  status is 200
+
+↳ Fake validation service
+  POST http://localhost:8080/mock/validate [200 OK, 180B, 3ms]
+  ✓  status is 200
+
+↳ Send a test webhook
+  POST http://localhost:8080/mock/webhooks/manual-test [200 OK, 205B, 24ms]
+  ✓  status is 200
+
+❏ 8. Utility
+↳ Mark tasks as system input
+  PUT http://localhost:8080/utility/workflow-tasks/system-input?workflowId=6ae1ce03b27829f6c22e2cb9&isSystemInput=true [200 OK, 165B, 14ms]
+  ✓  status is 200
+
+↳ Copy tasks between workflows
+  GET http://localhost:8080/utility/modify-workflow?sourceWorkflowId=6ae1cdf3b27829f6c22e2c9f&targetWorkflowId=6ae1ce03b27829f6c22e2cb9 [200 OK, 165B, 16ms]
+  ✓  status is 200 or 400 or 409
+
+┌─────────────────────────┬────────────────────┬───────────────────┐
+│                         │           executed │            failed │
+├─────────────────────────┼────────────────────┼───────────────────┤
+│              iterations │                  1 │                 0 │
+├─────────────────────────┼────────────────────┼───────────────────┤
+│                requests │                 69 │                 1 │
+├─────────────────────────┼────────────────────┼───────────────────┤
+│            test-scripts │                 69 │                 1 │
+├─────────────────────────┼────────────────────┼───────────────────┤
+│      prerequest-scripts │                  1 │                 0 │
+├─────────────────────────┼────────────────────┼───────────────────┤
+│              assertions │                 81 │                15 │
+├─────────────────────────┴────────────────────┴───────────────────┤
+│ total run duration: 3.6s                                         │
+├──────────────────────────────────────────────────────────────────┤
+│ total data received: 175.78kB (approx)                           │
+├──────────────────────────────────────────────────────────────────┤
+│ average response time: 39ms [min: 3ms, max: 1182ms, s.d.: 141ms] │
+└──────────────────────────────────────────────────────────────────┘
+
+[31m   # [39m[31m failure        [39m[31m detail                                                                          [39m
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 01.  AssertionError  status is 200                                                                   
+                      expected [ 200 ] to include 500                                                 
+                      at assertion:0 in test-script                                                   
+                      inside "5. Execute a workflow / Full name"                                      
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 02.  AssertionError  COMPLETED                                                                       
+                      expected undefined to deeply equal 'COMPLETED'                                  
+                      at assertion:1 in test-script                                                   
+                      inside "5. Execute a workflow / Full name"                                      
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 03.  AssertionError  status is 200                                                                   
+                      expected [ 200 ] to include 500                                                 
+                      at assertion:0 in test-script                                                   
+                      inside "5. Execute a workflow / Email"                                          
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 04.  AssertionError  status is 200                                                                   
+                      expected [ 200 ] to include 500                                                 
+                      at assertion:0 in test-script                                                   
+                      inside "5. Execute a workflow / Customer type = Business (shows company_name)"  
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 05.  TypeError                                                                                       
+                      Cannot read properties of undefined (reading 'find')                            
+                      at test-script                                                                  
+                      inside "5. Execute a workflow / Customer type = Business (shows company_name)"  
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 06.  AssertionError  status is 200                                                                   
+                      expected [ 200 ] to include 500                                                 
+                      at assertion:0 in test-script                                                   
+                      inside "5. Execute a workflow / Company name"                                   
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 07.  AssertionError  status is 200                                                                   
+                      expected [ 200 ] to include 500                                                 
+                      at assertion:0 in test-script                                                   
+                      inside "5. Execute a workflow / City"                                           
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 08.  AssertionError  status is 200                                                                   
+                      expected [ 200 ] to include 500                                                 
+                      at assertion:0 in test-script                                                   
+                      inside "5. Execute a workflow / ID photo (runs logSideEffect)"                  
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 09.  AssertionError  status is 200                                                                   
+                      expected [ 200 ] to include 500                                                 
+                      at assertion:0 in test-script                                                   
+                      inside "5. Execute a workflow / Contacts count = 1 (activates 1 of 2)"          
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 10.  TypeError       contact_1 on, contact_2 off                                                     
+                      Cannot read properties of undefined (reading 'find')                            
+                      at assertion:1 in test-script                                                   
+                      inside "5. Execute a workflow / Contacts count = 1 (activates 1 of 2)"          
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 11.  AssertionError  status is 200                                                                   
+                      expected [ 200 ] to include 500                                                 
+                      at assertion:0 in test-script                                                   
+                      inside "5. Execute a workflow / Contact 1 name"                                 
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 12.  AssertionError  status is 200                                                                   
+                      expected [ 200 ] to include 500                                                 
+                      at assertion:0 in test-script                                                   
+                      inside "5. Execute a workflow / Accept terms (fires httpHook + async beanHook)" 
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 13.  AssertionError  webhook for this asset                                                          
+                      expected false to deeply equal true                                             
+                      at assertion:1 in test-script                                                   
+                      inside "5. Execute a workflow / Check the webhook arrived"                      
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 14.  AssertionError  submitted                                                                       
+                      expected false to deeply equal true                                             
+                      at assertion:1 in test-script                                                   
+                      inside "5. Execute a workflow / Submit"                                         
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 15.  AssertionError  status is 409                                                                   
+                      expected [ 409 ] to include 500                                                 
+                      at assertion:0 in test-script                                                   
+                      inside "5. Execute a workflow / Edit after submit (expect 409)"                 
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 16.  Error                                                                                           
+                      runtime:extensions~request: request url is empty                                
+                      at request                                                                      
+                      inside ""                                                                       
+[90m     [39m[90m                [39m[90m                                                                                 [39m
+ 17.  AssertionError  status is 200                                                                   
+                      expected [ 200 ] to include undefined                                           
+                      at assertion:0 in test-script                                                   
+                      inside "6. Media / Upload file to URL (choose a file in Body)"                  

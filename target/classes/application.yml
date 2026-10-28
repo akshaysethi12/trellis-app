@@ -1,0 +1,64 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: trellis
+  data:
+    mongodb:
+      # Single-node replica set from docker-compose.yml. Needed because publishing a workflow is @Transactional.
+      uri: ${MONGO_URI:mongodb://localhost:27017/trellis?replicaSet=rs0&directConnection=true}
+      auto-index-creation: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+trellis:
+  mongo:
+    transactions-enabled: ${TRELLIS_MONGO_TRANSACTIONS:true}
+  app:
+    # Base URL used in the sample workflow's hook URLs (points at this service's /mock endpoints)
+    mock-base-url: ${TRELLIS_MOCK_BASE_URL:http://localhost:${server.port:8080}}
+  runtime:
+    default-tenant: DEFAULT
+    sdk-source-type: API
+    hooks:
+      async-pool-size: 4
+    media:
+      local-dir: ${TRELLIS_MEDIA_DIR:./data/media}
+      public-base-url: ${TRELLIS_PUBLIC_BASE_URL:}
+    seed:
+      enabled: ${TRELLIS_SEED_ENABLED:true}
+      locations:
+        - classpath*:trellis-seed/*.json
+      force-new-version: false
+  # trellis-core builds an S3 client at startup. Dummy values are fine until you upload to real S3.
+  storage:
+    default-provider: s3
+    providers:
+      s3:
+        access-key: ${AWS_ACCESS_KEY:local}
+        secret-key: ${AWS_SECRET_KEY:local}
+        session-token: ${AWS_SESSION_TOKEN:}
+        region: ${AWS_REGION:us-east-1}
+        bucket: ${AWS_S3_BUCKET_NAME:trellis-local}
+        bucket-suffix: ${AWS_S3_BUCKET_SUFFIX:local}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    io.trellis: INFO
+    io.trellis.core.commands: DEBUG
