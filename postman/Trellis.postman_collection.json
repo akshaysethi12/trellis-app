@@ -1,0 +1,3005 @@
+{
+  "info": {
+    "name": "Trellis",
+    "description": "Local API collection for the Trellis service.\n\nRun the folders in order (Collection Runner works). Variables are stored on the collection; set baseUrl if the service is not on localhost:8080.\n\n1. Health\n2. Task types\n3. Workflows (read the seeded SAMPLE_ONBOARDING workflow)\n4. Build a workflow (create, edit, publish, version)\n5. Execute a workflow (the runtime API: validation, dependencies, side effects, hooks, submit, reset)\n6. Media, Mock services, Utility",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "tenantId",
+      "value": "DEFAULT"
+    },
+    {
+      "key": "userEmail",
+      "value": "tester@example.com"
+    },
+    {
+      "key": "workflowCode",
+      "value": "SAMPLE_ONBOARDING"
+    },
+    {
+      "key": "workflowId",
+      "value": ""
+    },
+    {
+      "key": "assetId",
+      "value": "ASSET-1"
+    },
+    {
+      "key": "workflowExecutionId",
+      "value": ""
+    },
+    {
+      "key": "draftWorkflowId",
+      "value": ""
+    },
+    {
+      "key": "draftWorkflowCode",
+      "value": ""
+    },
+    {
+      "key": "editDraftId",
+      "value": ""
+    },
+    {
+      "key": "uploadUrl",
+      "value": ""
+    },
+    {
+      "key": "imgPath",
+      "value": ""
+    },
+    {
+      "key": "copyWorkflowId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('UP', () => pm.expect(pm.response.json().status).to.eql('UP'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OpenAPI spec",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v3/api-docs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v3",
+                "api-docs"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Task types",
+      "item": [
+        {
+          "name": "Upsert all task types",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/task-types/all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "task-types",
+                "all"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"taskTypeId\": \"ROOT\",\n    \"description\": \"Invisible root; its childTaskIds order the top-level sections\",\n    \"createdBy\": \"seed\",\n    \"isActionable\": false,\n    \"metaSchema\": {\n      \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n      \"type\": \"object\",\n      \"properties\": {}\n    }\n  },\n  {\n    \"taskTypeId\": \"SECTION\",\n    \"description\": \"Top-level group\",\n    \"createdBy\": \"seed\",\n    \"isActionable\": false,\n    \"metaSchema\": {\n      \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n      \"type\": \"object\",\n      \"properties\": {\n        \"description\": {\n          \"type\": \"string\"\n        },\n        \"icon\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        }\n      },\n      \"required\": [\n        \"description\"\n      ]\n    }\n  },\n  {\n    \"taskTypeId\": \"TAB\",\n    \"description\": \"Group of leaf tasks shown together\",\n    \"createdBy\": \"seed\",\n    \"isActionable\": false,\n    \"metaSchema\": {\n      \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n      \"type\": \"object\",\n      \"properties\": {\n        \"description\": {\n          \"type\": \"string\"\n        },\n        \"icon\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        }\n      },\n      \"required\": [\n        \"description\"\n      ]\n    }\n  },\n  {\n    \"taskTypeId\": \"TEXT\",\n    \"description\": \"Free text. Answer: {textBox: {value}}\",\n    \"createdBy\": \"seed\",\n    \"isActionable\": true,\n    \"metaSchema\": {\n      \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n      \"type\": \"object\",\n      \"properties\": {\n        \"description\": {\n          \"type\": \"string\"\n        },\n        \"icon\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        },\n        \"textBox\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"required\": {\n              \"type\": \"boolean\"\n            },\n            \"description\": {\n              \"type\": \"string\"\n            },\n            \"errorMessage\": {\n              \"type\": \"string\"\n            },\n            \"type\": {\n              \"type\": \"string\",\n              \"enum\": [\n                \"ALPHANUMERIC\",\n                \"ALPHABETIC\",\n                \"NUMERIC\"\n              ]\n            }\n          }\n        }\n      },\n      \"required\": [\n        \"description\",\n        \"textBox\"\n      ]\n    }\n  },\n  {\n    \"taskTypeId\": \"RADIO_BUTTON\",\n    \"description\": \"Single choice. Answer: {radioButton: {option}}\",\n    \"createdBy\": \"seed\",\n    \"isActionable\": true,\n    \"metaSchema\": {\n      \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n      \"type\": \"object\",\n      \"properties\": {\n        \"description\": {\n          \"type\": \"string\"\n        },\n        \"icon\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        },\n        \"radioButton\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"required\": {\n              \"type\": \"boolean\"\n            },\n            \"description\": {\n              \"type\": \"string\"\n            },\n            \"errorMessage\": {\n              \"type\": \"string\"\n            },\n            \"options\": {\n              \"type\": \"array\",\n              \"items\": {\n                \"type\": \"string\"\n              },\n              \"minItems\": 1\n            }\n          }\n        }\n      },\n      \"required\": [\n        \"description\",\n        \"radioButton\"\n      ]\n    }\n  },\n  {\n    \"taskTypeId\": \"DROPDOWN\",\n    \"description\": \"Single choice from a list. Answer: {dropdown: {option}}\",\n    \"createdBy\": \"seed\",\n    \"isActionable\": true,\n    \"metaSchema\": {\n      \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n      \"type\": \"object\",\n      \"properties\": {\n        \"description\": {\n          \"type\": \"string\"\n        },\n        \"icon\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        },\n        \"dropdown\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"required\": {\n              \"type\": \"boolean\"\n            },\n            \"description\": {\n              \"type\": \"string\"\n            },\n            \"errorMessage\": {\n              \"type\": \"string\"\n            },\n            \"options\": {\n              \"type\": \"array\",\n              \"items\": {\n                \"type\": \"string\"\n              },\n              \"minItems\": 1\n            }\n          }\n        }\n      },\n      \"required\": [\n        \"description\",\n        \"dropdown\"\n      ]\n    }\n  },\n  {\n    \"taskTypeId\": \"CHECKBOX\",\n    \"description\": \"One or more ticks. Answer: {checkbox: [{option}]}\",\n    \"createdBy\": \"seed\",\n    \"isActionable\": true,\n    \"metaSchema\": {\n      \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n      \"type\": \"object\",\n      \"properties\": {\n        \"description\": {\n          \"type\": \"string\"\n        },\n        \"icon\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        },\n        \"checkbox\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"required\": {\n              \"type\": \"boolean\"\n            },\n            \"description\": {\n              \"type\": \"string\"\n            },\n            \"errorMessage\": {\n              \"type\": \"string\"\n            },\n            \"options\": {\n              \"type\": \"array\",\n              \"items\": {\n                \"type\": \"string\"\n              },\n              \"minItems\": 1\n            }\n          }\n        }\n      },\n      \"required\": [\n        \"description\",\n        \"checkbox\"\n      ]\n    }\n  },\n  {\n    \"taskTypeId\": \"IMAGE\",\n    \"description\": \"Photo. Answer: {image: [{path, hashKey, timestamp}]}\",\n    \"createdBy\": \"seed\",\n    \"isActionable\": true,\n    \"metaSchema\": {\n      \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n      \"type\": \"object\",\n      \"properties\": {\n        \"description\": {\n          \"type\": \"string\"\n        },\n        \"icon\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ]\n        },\n        \"image\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"required\": {\n              \"type\": \"boolean\"\n            },\n            \"description\": {\n              \"type\": \"string\"\n            },\n            \"errorMessage\": {\n              \"type\": \"string\"\n            },\n            \"options\": {\n              \"type\": \"array\",\n              \"minItems\": 1,\n              \"items\": {\n                \"type\": \"object\",\n                \"required\": [\n                  \"hashKey\"\n                ],\n                \"properties\": {\n                  \"hashKey\": {\n                    \"type\": \"string\"\n                  },\n                  \"description\": {\n                    \"type\": \"string\"\n                  },\n                  \"required\": {\n                    \"type\": \"boolean\"\n                  },\n                  \"sideEffectBeans\": {\n                    \"type\": \"array\",\n                    \"items\": {\n                      \"type\": \"string\"\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n      },\n      \"required\": [\n        \"description\",\n        \"image\"\n      ]\n    }\n  }\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Creates or updates the 8 task types (ROOT, SECTION, TAB, TEXT, RADIO_BUTTON, DROPDOWN, CHECKBOX, IMAGE). The seed loader already does this on startup."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List task types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/task-types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "task-types"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get task type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/task-types/TEXT",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "task-types",
+                "TEXT"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create task type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/task-types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "task-types"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taskTypeId\": \"NOTE_{{$timestamp}}\",\n  \"description\": \"Read-only note\",\n  \"createdBy\": \"{{userEmail}}\",\n  \"isActionable\": false,\n  \"metaSchema\": {\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n    \"type\": \"object\",\n    \"properties\": {\n      \"description\": {\n        \"type\": \"string\"\n      }\n    },\n    \"required\": [\n      \"description\"\n    ]\n  },\n  \"updatedBy\": \"{{userEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', () => pm.expect([201]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update task type (updatedBy)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/task-types/TEXT",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "task-types",
+                "TEXT"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"updatedBy\": \"{{userEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Workflows (read)",
+      "item": [
+        {
+          "name": "Latest published SAMPLE_ONBOARDING",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{workflowCode}}/latest-published",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{workflowCode}}",
+                "latest-published"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('workflowId', j.workflowId);",
+                  "pm.test('has workflowId', () => pm.expect(j.workflowId).to.be.a('string'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Expanded workflow (tree)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{workflowId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{workflowId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "All tasks (flat)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{workflowId}}/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{workflowId}}",
+                "tasks"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Full task hierarchy",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{workflowId}}/tasks/full",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{workflowId}}",
+                "tasks",
+                "full"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Children of a task",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{workflowId}}/tasks/expanded?parentTaskId=profile_tab",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{workflowId}}",
+                "tasks",
+                "expanded"
+              ],
+              "query": [
+                {
+                  "key": "parentTaskId",
+                  "value": "profile_tab"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Single task",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{workflowId}}/tasks/full_name",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{workflowId}}",
+                "tasks",
+                "full_name"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List workflows (latest versions)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows?pageNumber=0&pageSize=10&published=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows"
+              ],
+              "query": [
+                {
+                  "key": "pageNumber",
+                  "value": "0"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "published",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "All workflows (every version)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "all"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Versions of a workflow code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{workflowCode}}/versions?pageNumber=0&pageSize=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{workflowCode}}",
+                "versions"
+              ],
+              "query": [
+                {
+                  "key": "pageNumber",
+                  "value": "0"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Workflow meta by id",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/meta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "meta"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workflowId\": \"{{workflowId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Export workflow tasks (JSON)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/export?workflowId={{workflowId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "workflowId",
+                  "value": "{{workflowId}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Build a workflow",
+      "item": [
+        {
+          "name": "1. Create empty draft workflow",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/empty",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "empty"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo from API\",\n  \"description\": \"Built step by step from Postman\",\n  \"tenantId\": \"{{tenantId}}\",\n  \"workflowCode\": \"DEMO_{{$timestamp}}\",\n  \"createdBy\": \"{{userEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', () => pm.expect([201]).to.include(pm.response.code));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('draftWorkflowId', j.workflowId);",
+                  "pm.collectionVariables.set('draftWorkflowCode', j.workflowCode);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Save task tree (saveAll)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{draftWorkflowId}}/tasks/saveAll",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{draftWorkflowId}}",
+                "tasks",
+                "saveAll"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"taskId\": \"root\",\n    \"taskType\": \"ROOT\",\n    \"parentTaskId\": null,\n    \"childTaskIds\": [\n      \"intro\"\n    ],\n    \"meta\": {}\n  },\n  {\n    \"taskId\": \"intro\",\n    \"taskType\": \"SECTION\",\n    \"parentTaskId\": \"root\",\n    \"childTaskIds\": [\n      \"intro_tab\"\n    ],\n    \"meta\": {\n      \"description\": \"Intro\"\n    }\n  },\n  {\n    \"taskId\": \"intro_tab\",\n    \"taskType\": \"TAB\",\n    \"parentTaskId\": \"intro\",\n    \"childTaskIds\": [\n      \"nickname\",\n      \"agree\"\n    ],\n    \"meta\": {\n      \"description\": \"Basics\"\n    }\n  },\n  {\n    \"taskId\": \"nickname\",\n    \"taskType\": \"TEXT\",\n    \"parentTaskId\": \"intro_tab\",\n    \"childTaskIds\": [],\n    \"meta\": {\n      \"description\": \"Nickname\",\n      \"textBox\": {\n        \"required\": true,\n        \"description\": \"What should we call you?\",\n        \"type\": \"ALPHANUMERIC\"\n      }\n    }\n  },\n  {\n    \"taskId\": \"agree\",\n    \"taskType\": \"RADIO_BUTTON\",\n    \"parentTaskId\": \"intro_tab\",\n    \"childTaskIds\": [],\n    \"meta\": {\n      \"description\": \"Ready to start?\",\n      \"radioButton\": {\n        \"required\": true,\n        \"options\": [\n          \"Yes\",\n          \"No\"\n        ]\n      }\n    }\n  }\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Each task's meta is validated against its task type's JSON schema. parentTaskId/childTaskIds define the tree; the ROOT task's childTaskIds order the sections."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Create one more task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{draftWorkflowId}}/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{draftWorkflowId}}",
+                "tasks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taskId\": \"favourite_colour\",\n  \"taskType\": \"DROPDOWN\",\n  \"meta\": {\n    \"description\": \"Favourite colour\",\n    \"dropdown\": {\n      \"required\": false,\n      \"options\": [\n        \"Red\",\n        \"Green\",\n        \"Blue\"\n      ]\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Creating a task does not attach it to a parent. Step 4 does that."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', () => pm.expect([201]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Attach task to parent",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/manage/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "manage",
+                "tasks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workflowId\": \"{{draftWorkflowId}}\",\n  \"parentTaskId\": \"intro_tab\",\n  \"childTaskId\": \"favourite_colour\",\n  \"position\": 2,\n  \"operation\": \"ADD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Update a task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{draftWorkflowId}}/tasks/nickname",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{draftWorkflowId}}",
+                "tasks",
+                "nickname"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taskId\": \"nickname\",\n  \"taskType\": \"TEXT\",\n  \"meta\": {\n    \"description\": \"Nickname (updated)\",\n    \"textBox\": {\n      \"required\": true,\n      \"description\": \"What should we call you?\",\n      \"type\": \"ALPHABETIC\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Clone a task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{draftWorkflowId}}/tasks/cloneTask",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{draftWorkflowId}}",
+                "tasks",
+                "cloneTask"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceTaskId\": \"nickname\",\n  \"targetTaskId\": \"nickname_copy\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', () => pm.expect([201]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. Delete the clone",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{draftWorkflowId}}/tasks/nickname_copy",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{draftWorkflowId}}",
+                "tasks",
+                "nickname_copy"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', () => pm.expect([204]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. View tree",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{draftWorkflowId}}/tasks/full",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{draftWorkflowId}}",
+                "tasks",
+                "full"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9. Save designer layout (graph-info)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/graph-info",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "graph-info"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workflowId\": \"{{draftWorkflowId}}\",\n  \"nodes\": [\n    {\n      \"id\": \"intro\",\n      \"position\": {\n        \"x\": 0,\n        \"y\": 0\n      }\n    }\n  ],\n  \"edges\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10. Read designer layout",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/graph-info?workflowId={{draftWorkflowId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "graph-info"
+              ],
+              "query": [
+                {
+                  "key": "workflowId",
+                  "value": "{{draftWorkflowId}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11. Publish (role header required)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-user-roles",
+                "value": "TRELLIS-WORKFLOW-PUBLISHER"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{draftWorkflowId}}/publish",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{draftWorkflowId}}",
+                "publish"
+              ]
+            },
+            "description": "Publishing needs header x-user-roles: TRELLIS-WORKFLOW-PUBLISHER. Clients can only execute published workflows."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "12. Publish without role (expect 403)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{draftWorkflowId}}/publish",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{draftWorkflowId}}",
+                "publish"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('rejected', () => pm.expect(pm.response.code).to.be.at.least(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "13. Start an edit (creates a draft copy)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{draftWorkflowId}}/modify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{draftWorkflowId}}",
+                "modify"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const tasks = pm.response.json();",
+                  "if (tasks.length) pm.collectionVariables.set('editDraftId', tasks[0].workflowId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14. Change a task in the edit draft",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{editDraftId}}/tasks/agree",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{editDraftId}}",
+                "tasks",
+                "agree"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taskId\": \"agree\",\n  \"taskType\": \"RADIO_BUTTON\",\n  \"meta\": {\n    \"description\": \"Ready to start now?\",\n    \"radioButton\": {\n      \"required\": true,\n      \"options\": [\n        \"Yes\",\n        \"Later\"\n      ]\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "15. Diff draft vs published",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{editDraftId}}/diff",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{editDraftId}}",
+                "diff"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "16. Publish the edit as a new version",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-user-roles",
+                "value": "TRELLIS-WORKFLOW-PUBLISHER"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{editDraftId}}/publish?newVersion=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{editDraftId}}",
+                "publish"
+              ],
+              "query": [
+                {
+                  "key": "newVersion",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "17. Versions of the new code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{draftWorkflowCode}}/versions?pageNumber=0&pageSize=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{draftWorkflowCode}}",
+                "versions"
+              ],
+              "query": [
+                {
+                  "key": "pageNumber",
+                  "value": "0"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "18. Copy SAMPLE_ONBOARDING into a new workflow",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/copyWorkflow?sourceWorkflowId={{workflowId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "copyWorkflow"
+              ],
+              "query": [
+                {
+                  "key": "sourceWorkflowId",
+                  "value": "{{workflowId}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Copy of sample onboarding\",\n  \"description\": \"Copied from the seed\",\n  \"tenantId\": \"{{tenantId}}\",\n  \"workflowCode\": \"COPY_{{$timestamp}}\",\n  \"createdBy\": \"{{userEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', () => pm.expect([201]).to.include(pm.response.code));",
+                  "const t = pm.response.json();",
+                  "if (t.length) pm.collectionVariables.set('copyWorkflowId', t[0].workflowId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "19. Delete the copy",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/{{copyWorkflowId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "{{copyWorkflowId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "20. Import tasks from a JSON file (pick postman/sample-import-tasks.json)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflows/import",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "workflows",
+                "import"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "sample-import-tasks.json"
+                },
+                {
+                  "key": "name",
+                  "value": "Imported workflow",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Imported from a JSON export",
+                  "type": "text"
+                },
+                {
+                  "key": "tenantId",
+                  "value": "{{tenantId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "workflowCode",
+                  "value": "IMPORTED_{{$timestamp}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "description": "Multipart upload. In the Body tab, select postman/sample-import-tasks.json for the file field. The import runs in the background; then call GET /workflows/all to find it."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Creates a new workflow code from scratch, publishes it, then edits it and publishes version 2."
+    },
+    {
+      "name": "5. Execute a workflow",
+      "item": [
+        {
+          "name": "Start a new asset (sets assetId)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "Generates a fresh assetId (one execution = one asset). Run this again to start over."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('assetId', 'ASSET-' + Date.now());",
+                  "console.log('assetId =', pm.collectionVariables.get('assetId'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get task tree (creates the execution)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/full-hierarchy?assetId={{assetId}}&workflowId={{workflowCode}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "full-hierarchy"
+              ],
+              "query": [
+                {
+                  "key": "assetId",
+                  "value": "{{assetId}}"
+                },
+                {
+                  "key": "workflowId",
+                  "value": "{{workflowCode}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('workflowExecutionId', j.workflowExecutionId);",
+                  "pm.test('has tasks', () => pm.expect(j.tasksTree.length).to.be.above(0));",
+                  "pm.test('NOT_STARTED or IN_PROGRESS', () => pm.expect(['NOT_STARTED','IN_PROGRESS']).to.include(j.status));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject: empty answer (Java validator)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"full_name\",\n  \"capturedValue\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.expect([400]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject: name too short (beanValidationHook)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"full_name\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"Al\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 422', () => pm.expect([422]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject: email fails external check (httpValidationHook)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"email\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"invalid@example.com\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 422', () => pm.expect([422]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Full name",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"full_name\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"Asha Rao\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('COMPLETED', () => pm.expect(pm.response.json().taskStatus).to.eql('COMPLETED'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Email",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"email\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"asha@example.com\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Customer type = Business (shows company_name)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"customer_type\",\n  \"capturedValue\": {\n    \"radioButton\": {\n      \"option\": \"Business\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const u = pm.response.json().dependentTaskUpdates.find(t => t.taskId === 'company_name');",
+                  "pm.test('company_name now active', () => pm.expect(u.active).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Company name",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"company_name\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"Rao Traders\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "City",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"city\",\n  \"capturedValue\": {\n    \"dropdown\": {\n      \"option\": \"Bengaluru\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ID photo (runs logSideEffect)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"id_photo\",\n  \"capturedValue\": {\n    \"image\": [\n      {\n        \"path\": \"trellis/{{assetId}}/id_photo/id_front.jpg\",\n        \"hashKey\": \"id_front\",\n        \"timestamp\": 1793085000000\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Contacts count = 1 (activates 1 of 2)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"contacts_count\",\n  \"capturedValue\": {\n    \"dropdown\": {\n      \"option\": \"1\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const u = pm.response.json().dependentTaskUpdates;",
+                  "pm.test('contact_1 on, contact_2 off', () => { pm.expect(u.find(t=>t.taskId==='contact_1_name').active).to.eql(true); pm.expect(u.find(t=>t.taskId==='contact_2_name').active).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Contact 1 name",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"contact_1_name\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"Ravi Rao\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Submit too early (lists missing tasks)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/submit?assetId={{assetId}}&workflowId={{workflowCode}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "submit"
+              ],
+              "query": [
+                {
+                  "key": "assetId",
+                  "value": "{{assetId}}"
+                },
+                {
+                  "key": "workflowId",
+                  "value": "{{workflowCode}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const j = pm.response.json();",
+                  "pm.test('not submitted', () => pm.expect(j.success).to.eql(false));",
+                  "pm.test('terms missing', () => pm.expect(j.incompleteTasks.childTasks.map(t=>t.taskId)).to.include('terms'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Accept terms (fires httpHook + async beanHook)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"terms\",\n  \"capturedValue\": {\n    \"checkbox\": [\n      {\n        \"option\": \"I accept the terms\"\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Check the webhook arrived",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mock/webhooks?channel=terms-accepted",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mock",
+                "webhooks"
+              ],
+              "query": [
+                {
+                  "key": "channel",
+                  "value": "terms-accepted"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('webhook for this asset', () => pm.expect(pm.response.json().some(w => w.body && w.body.assetId === pm.collectionVariables.get('assetId'))).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get task tree (with answers)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/full-hierarchy?assetId={{assetId}}&workflowId={{workflowCode}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "full-hierarchy"
+              ],
+              "query": [
+                {
+                  "key": "assetId",
+                  "value": "{{assetId}}"
+                },
+                {
+                  "key": "workflowId",
+                  "value": "{{workflowCode}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Submit",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/submit?assetId={{assetId}}&workflowId={{workflowCode}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "submit"
+              ],
+              "query": [
+                {
+                  "key": "assetId",
+                  "value": "{{assetId}}"
+                },
+                {
+                  "key": "workflowId",
+                  "value": "{{workflowCode}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('submitted', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Edit after submit (expect 409)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"city\",\n  \"capturedValue\": {\n    \"dropdown\": {\n      \"option\": \"Mumbai\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', () => pm.expect([409]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reset (archives v1, starts v2)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/reset?assetId={{assetId}}&workflowId={{workflowCode}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "reset"
+              ],
+              "query": [
+                {
+                  "key": "assetId",
+                  "value": "{{assetId}}"
+                },
+                {
+                  "key": "workflowId",
+                  "value": "{{workflowCode}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('version 2', () => pm.expect(pm.response.json().version).to.eql(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Read archived version 1",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/version-snapshot?assetId={{assetId}}&workflowId={{workflowCode}}&version=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "version-snapshot"
+              ],
+              "query": [
+                {
+                  "key": "assetId",
+                  "value": "{{assetId}}"
+                },
+                {
+                  "key": "workflowId",
+                  "value": "{{workflowCode}}"
+                },
+                {
+                  "key": "version",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('read-only', () => pm.expect(pm.response.json().isEditable).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get task tree (GET variant)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/full-hierarchy?assetId={{assetId}}&workflowId={{workflowCode}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "full-hierarchy"
+              ],
+              "query": [
+                {
+                  "key": "assetId",
+                  "value": "{{assetId}}"
+                },
+                {
+                  "key": "workflowId",
+                  "value": "{{workflowCode}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Runs one asset through SAMPLE_ONBOARDING. Uses the same endpoints a mobile client calls."
+    },
+    {
+      "name": "6. Media",
+      "item": [
+        {
+          "name": "Get upload URL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/media/signed-url",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "media",
+                "signed-url"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"taskId\": \"id_photo\",\n  \"hashKey\": \"id_front\",\n  \"fileName\": \"id_front.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('uploadUrl', j.signedUrl);",
+                  "pm.collectionVariables.set('imgPath', j.imgPath);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload file to URL (choose a file in Body)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "image/jpeg"
+              }
+            ],
+            "body": {
+              "mode": "file",
+              "file": {}
+            },
+            "url": {
+              "raw": "{{uploadUrl}}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Download the file",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/media/files/{{imgPath}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "media",
+                "files",
+                "{{imgPath}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200 or 404', () => pm.expect([200, 404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Mock services",
+      "item": [
+        {
+          "name": "List received webhooks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mock/webhooks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mock",
+                "webhooks"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clear received webhooks",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mock/webhooks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mock",
+                "webhooks"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fake validation service",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mock/validate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mock",
+                "validate"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": \"hello\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send a test webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mock/webhooks/manual-test",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mock",
+                "webhooks",
+                "manual-test"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hello\": \"world\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8. Utility",
+      "item": [
+        {
+          "name": "Mark tasks as system input",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/utility/workflow-tasks/system-input?workflowId={{editDraftId}}&isSystemInput=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "utility",
+                "workflow-tasks",
+                "system-input"
+              ],
+              "query": [
+                {
+                  "key": "workflowId",
+                  "value": "{{editDraftId}}"
+                },
+                {
+                  "key": "isSystemInput",
+                  "value": "true"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"favourite_colour\"\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "System-input tasks are filled by the server, not the user. Only works on a draft (unpublished) workflow."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Copy tasks between workflows",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/utility/modify-workflow?sourceWorkflowId={{workflowId}}&targetWorkflowId={{editDraftId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "utility",
+                "modify-workflow"
+              ],
+              "query": [
+                {
+                  "key": "sourceWorkflowId",
+                  "value": "{{workflowId}}"
+                },
+                {
+                  "key": "targetWorkflowId",
+                  "value": "{{editDraftId}}"
+                }
+              ]
+            },
+            "description": "Copies the source workflow's tasks into the target draft. Fails if the target is published."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200 or 400 or 409', () => pm.expect([200, 400, 409]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

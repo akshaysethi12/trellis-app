@@ -1,0 +1,64 @@
+[
+  {
+    "taskId": "root",
+    "taskType": "ROOT",
+    "parentTaskId": null,
+    "childTaskIds": [
+      "intro"
+    ],
+    "meta": {}
+  },
+  {
+    "taskId": "intro",
+    "taskType": "SECTION",
+    "parentTaskId": "root",
+    "childTaskIds": [
+      "intro_tab"
+    ],
+    "meta": {
+      "description": "Intro"
+    }
+  },
+  {
+    "taskId": "intro_tab",
+    "taskType": "TAB",
+    "parentTaskId": "intro",
+    "childTaskIds": [
+      "nickname",
+      "agree"
+    ],
+    "meta": {
+      "description": "Basics"
+    }
+  },
+  {
+    "taskId": "nickname",
+    "taskType": "TEXT",
+    "parentTaskId": "intro_tab",
+    "childTaskIds": [],
+    "meta": {
+      "description": "Nickname",
+      "textBox": {
+        "required": true,
+        "description": "What should we call you?",
+        "type": "ALPHANUMERIC"
+      }
+    }
+  },
+  {
+    "taskId": "agree",
+    "taskType": "RADIO_BUTTON",
+    "parentTaskId": "intro_tab",
+    "childTaskIds": [],
+    "meta": {
+      "description": "Ready to start?",
+      "radioButton": {
+        "required": true,
+        "options": [
+          "Yes",
+          "No"
+        ]
+      }
+    }
+  }
+]

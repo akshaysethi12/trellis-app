@@ -1,0 +1,667 @@
+{
+  "taskTypes": [
+    {
+      "taskTypeId": "ROOT",
+      "description": "Invisible root; its childTaskIds order the top-level sections",
+      "createdBy": "seed",
+      "isActionable": false,
+      "metaSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "taskTypeId": "SECTION",
+      "description": "Top-level group",
+      "createdBy": "seed",
+      "isActionable": false,
+      "metaSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "description"
+        ]
+      }
+    },
+    {
+      "taskTypeId": "TAB",
+      "description": "Group of leaf tasks shown together",
+      "createdBy": "seed",
+      "isActionable": false,
+      "metaSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "description"
+        ]
+      }
+    },
+    {
+      "taskTypeId": "TEXT",
+      "description": "Free text. Answer: {textBox: {value}}",
+      "createdBy": "seed",
+      "isActionable": true,
+      "metaSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "textBox": {
+            "type": "object",
+            "properties": {
+              "required": {
+                "type": "boolean"
+              },
+              "description": {
+                "type": "string"
+              },
+              "errorMessage": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "ALPHANUMERIC",
+                  "ALPHABETIC",
+                  "NUMERIC"
+                ]
+              }
+            }
+          }
+        },
+        "required": [
+          "description",
+          "textBox"
+        ]
+      }
+    },
+    {
+      "taskTypeId": "RADIO_BUTTON",
+      "description": "Single choice. Answer: {radioButton: {option}}",
+      "createdBy": "seed",
+      "isActionable": true,
+      "metaSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "radioButton": {
+            "type": "object",
+            "properties": {
+              "required": {
+                "type": "boolean"
+              },
+              "description": {
+                "type": "string"
+              },
+              "errorMessage": {
+                "type": "string"
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              }
+            }
+          }
+        },
+        "required": [
+          "description",
+          "radioButton"
+        ]
+      }
+    },
+    {
+      "taskTypeId": "DROPDOWN",
+      "description": "Single choice from a list. Answer: {dropdown: {option}}",
+      "createdBy": "seed",
+      "isActionable": true,
+      "metaSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dropdown": {
+            "type": "object",
+            "properties": {
+              "required": {
+                "type": "boolean"
+              },
+              "description": {
+                "type": "string"
+              },
+              "errorMessage": {
+                "type": "string"
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              }
+            }
+          }
+        },
+        "required": [
+          "description",
+          "dropdown"
+        ]
+      }
+    },
+    {
+      "taskTypeId": "CHECKBOX",
+      "description": "One or more ticks. Answer: {checkbox: [{option}]}",
+      "createdBy": "seed",
+      "isActionable": true,
+      "metaSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "checkbox": {
+            "type": "object",
+            "properties": {
+              "required": {
+                "type": "boolean"
+              },
+              "description": {
+                "type": "string"
+              },
+              "errorMessage": {
+                "type": "string"
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              }
+            }
+          }
+        },
+        "required": [
+          "description",
+          "checkbox"
+        ]
+      }
+    },
+    {
+      "taskTypeId": "IMAGE",
+      "description": "Photo. Answer: {image: [{path, hashKey, timestamp}]}",
+      "createdBy": "seed",
+      "isActionable": true,
+      "metaSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "image": {
+            "type": "object",
+            "properties": {
+              "required": {
+                "type": "boolean"
+              },
+              "description": {
+                "type": "string"
+              },
+              "errorMessage": {
+                "type": "string"
+              },
+              "options": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "hashKey"
+                  ],
+                  "properties": {
+                    "hashKey": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "required": {
+                      "type": "boolean"
+                    },
+                    "sideEffectBeans": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "description",
+          "image"
+        ]
+      }
+    }
+  ],
+  "workflows": [
+    {
+      "workflowCode": "SAMPLE_ONBOARDING",
+      "name": "Sample onboarding",
+      "description": "Sample workflow covering every Trellis feature",
+      "tenantId": "DEFAULT",
+      "publish": true,
+      "tasks": [
+        {
+          "taskId": "root",
+          "taskType": "ROOT",
+          "parentTaskId": null,
+          "childTaskIds": [
+            "profile",
+            "documents",
+            "consent"
+          ],
+          "meta": {}
+        },
+        {
+          "taskId": "profile",
+          "taskType": "SECTION",
+          "parentTaskId": "root",
+          "childTaskIds": [
+            "profile_tab"
+          ],
+          "meta": {
+            "description": "Profile",
+            "icon": "person"
+          }
+        },
+        {
+          "taskId": "profile_tab",
+          "taskType": "TAB",
+          "parentTaskId": "profile",
+          "childTaskIds": [
+            "full_name",
+            "email",
+            "customer_type",
+            "company_name",
+            "city"
+          ],
+          "meta": {
+            "description": "About you"
+          }
+        },
+        {
+          "taskId": "full_name",
+          "taskType": "TEXT",
+          "parentTaskId": "profile_tab",
+          "childTaskIds": [],
+          "meta": {
+            "description": "Full name",
+            "textBox": {
+              "required": true,
+              "description": "Your full name",
+              "type": "ALPHABETIC"
+            }
+          },
+          "dependencyBean": "answerSummary",
+          "validationHooks": [
+            {
+              "name": "min-length",
+              "type": "beanValidationHook",
+              "taskLifecycleTypes": [
+                "TASK_DATA_CAPTURED"
+              ],
+              "config": {
+                "beanName": "minLengthValidator",
+                "metadata": {
+                  "minLength": 3
+                }
+              }
+            }
+          ]
+        },
+        {
+          "taskId": "email",
+          "taskType": "TEXT",
+          "parentTaskId": "profile_tab",
+          "childTaskIds": [],
+          "meta": {
+            "description": "Email",
+            "textBox": {
+              "required": true,
+              "description": "name@example.com",
+              "type": "ALPHANUMERIC"
+            }
+          },
+          "validationHooks": [
+            {
+              "name": "external-check",
+              "type": "httpValidationHook",
+              "taskLifecycleTypes": [
+                "TASK_DATA_CAPTURED"
+              ],
+              "config": {
+                "url": "${trellis.app.mock-base-url}/mock/validate",
+                "method": "POST",
+                "requestMappings": {
+                  "value": "${capturedValue.textBox.value}",
+                  "assetId": "${assetId}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "taskId": "customer_type",
+          "taskType": "RADIO_BUTTON",
+          "parentTaskId": "profile_tab",
+          "childTaskIds": [],
+          "meta": {
+            "description": "Customer type",
+            "radioButton": {
+              "required": true,
+              "options": [
+                "Individual",
+                "Business"
+              ]
+            }
+          },
+          "dependencies": [
+            {
+              "dependentTaskIds": [
+                "company_name"
+              ],
+              "action": "TASK_VISIBILITY_ACTION",
+              "config": {
+                "path": "${capturedValue.radioButton.option}",
+                "dependentValue": "Business",
+                "activate": true
+              }
+            }
+          ]
+        },
+        {
+          "taskId": "company_name",
+          "taskType": "TEXT",
+          "parentTaskId": "profile_tab",
+          "childTaskIds": [],
+          "meta": {
+            "description": "Company name",
+            "textBox": {
+              "required": true,
+              "description": "Registered company name",
+              "type": "ALPHANUMERIC"
+            }
+          },
+          "isActiveByDefault": false
+        },
+        {
+          "taskId": "city",
+          "taskType": "DROPDOWN",
+          "parentTaskId": "profile_tab",
+          "childTaskIds": [],
+          "meta": {
+            "description": "City",
+            "dropdown": {
+              "required": true,
+              "options": [
+                "Bengaluru",
+                "Delhi",
+                "Mumbai",
+                "Other"
+              ]
+            }
+          }
+        },
+        {
+          "taskId": "documents",
+          "taskType": "SECTION",
+          "parentTaskId": "root",
+          "childTaskIds": [
+            "documents_tab"
+          ],
+          "meta": {
+            "description": "Documents",
+            "icon": "badge"
+          }
+        },
+        {
+          "taskId": "documents_tab",
+          "taskType": "TAB",
+          "parentTaskId": "documents",
+          "childTaskIds": [
+            "id_photo",
+            "contacts_count",
+            "contact_1_name",
+            "contact_2_name"
+          ],
+          "meta": {
+            "description": "Upload"
+          }
+        },
+        {
+          "taskId": "id_photo",
+          "taskType": "IMAGE",
+          "parentTaskId": "documents_tab",
+          "childTaskIds": [],
+          "meta": {
+            "description": "ID photo",
+            "image": {
+              "required": true,
+              "options": [
+                {
+                  "hashKey": "id_front",
+                  "description": "Front of ID",
+                  "required": true,
+                  "sideEffectBeans": [
+                    "logSideEffect"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "taskId": "contacts_count",
+          "taskType": "DROPDOWN",
+          "parentTaskId": "documents_tab",
+          "childTaskIds": [],
+          "meta": {
+            "description": "Number of emergency contacts",
+            "dropdown": {
+              "required": true,
+              "options": [
+                "0",
+                "1",
+                "2"
+              ]
+            }
+          },
+          "dependencies": [
+            {
+              "dependentTaskIds": [
+                "contact_1_name",
+                "contact_2_name"
+              ],
+              "action": "NUMERIC_TASK_ACTIVATION_ACTION",
+              "config": {
+                "path": "${capturedValue.dropdown.option}"
+              }
+            }
+          ]
+        },
+        {
+          "taskId": "contact_1_name",
+          "taskType": "TEXT",
+          "parentTaskId": "documents_tab",
+          "childTaskIds": [],
+          "meta": {
+            "description": "Contact 1 name",
+            "textBox": {
+              "required": true,
+              "description": "Full name",
+              "type": "ALPHABETIC"
+            }
+          },
+          "isActiveByDefault": false
+        },
+        {
+          "taskId": "contact_2_name",
+          "taskType": "TEXT",
+          "parentTaskId": "documents_tab",
+          "childTaskIds": [],
+          "meta": {
+            "description": "Contact 2 name",
+            "textBox": {
+              "required": true,
+              "description": "Full name",
+              "type": "ALPHABETIC"
+            }
+          },
+          "isActiveByDefault": false
+        },
+        {
+          "taskId": "consent",
+          "taskType": "SECTION",
+          "parentTaskId": "root",
+          "childTaskIds": [
+            "consent_tab"
+          ],
+          "meta": {
+            "description": "Consent",
+            "icon": "verified"
+          }
+        },
+        {
+          "taskId": "consent_tab",
+          "taskType": "TAB",
+          "parentTaskId": "consent",
+          "childTaskIds": [
+            "terms"
+          ],
+          "meta": {
+            "description": "Terms"
+          }
+        },
+        {
+          "taskId": "terms",
+          "taskType": "CHECKBOX",
+          "parentTaskId": "consent_tab",
+          "childTaskIds": [],
+          "meta": {
+            "description": "Terms",
+            "checkbox": {
+              "required": true,
+              "options": [
+                "I accept the terms"
+              ]
+            }
+          },
+          "hooks": [
+            {
+              "name": "terms-webhook",
+              "type": "httpHook",
+              "async": false,
+              "taskLifecycleTypes": [
+                "TASK_DATA_CAPTURED"
+              ],
+              "executionCondition": "['taskStatus'] == 'COMPLETED'",
+              "config": {
+                "url": "${trellis.app.mock-base-url}/mock/webhooks/terms-accepted",
+                "method": "POST",
+                "headers": {
+                  "X-Source": "trellis"
+                },
+                "requestMappings": {
+                  "event": "TERMS_ACCEPTED",
+                  "assetId": "${assetId}",
+                  "workflowCode": "${workflowCode}",
+                  "name": "${capturedTaskData.capturedTasks.full_name.capturedValue.textBox.value}",
+                  "answer": "${capturedValue.checkbox}"
+                }
+              }
+            },
+            {
+              "name": "terms-echo",
+              "type": "beanHook",
+              "async": true,
+              "taskLifecycleTypes": [
+                "TASK_DATA_CAPTURED"
+              ],
+              "config": {
+                "beanName": "echoHook"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
