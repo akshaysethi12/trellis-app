@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 /**
  * Backs the /api/v1/sdk/workflow endpoints that rn-trellis-core calls.
  *
- * "workflowId" in every call may be a real workflowId or a workflowCode such as SAMPLE_ONBOARDING.
+ * "workflowId" in every call may be a real workflowId or a workflowCode such as LOAN_APPLICATION.
  * A code resolves to the latest PUBLISHED version the first time an asset starts, and the asset
  * stays on that version afterwards.
  */

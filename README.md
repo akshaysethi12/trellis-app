@@ -48,8 +48,8 @@ docker compose ps                    # wait until trellis-mongo shows "healthy"
 ./mvnw spring-boot:run               # downloads Trellis, starts on http://localhost:8080
 ```
 
-On startup the seed loader creates 8 task types and publishes the `SAMPLE_ONBOARDING` workflow (17 tasks) from
-`src/main/resources/trellis-seed/sample-onboarding.json`.
+On startup the seed loader creates 8 task types and publishes the `LOAN_APPLICATION` workflow (31 tasks) from
+`src/main/resources/trellis-seed/loan-application.json`.
 
 | URL | What |
 |---|---|
@@ -83,7 +83,7 @@ Maven uses the copy in `~/.m2` before going to GitHub Packages.
 
 Import both files from `postman/`:
 
-- `Trellis.postman_collection.json` (69 requests with test scripts)
+- `Trellis.postman_collection.json` (80 requests with test scripts)
 - `Trellis-local.postman_environment.json` (sets `baseUrl`)
 
 Run the folders top to bottom, one request at a time or with the Collection Runner. Earlier requests save IDs
@@ -95,26 +95,35 @@ Run the folders top to bottom, one request at a time or with the Collection Runn
 | 2. Task types | Task types and their JSON schemas |
 | 3. Workflows (read) | The seeded workflow, its tree, versions and export |
 | 4. Build a workflow | Create a draft, save a task tree, add, attach, update, clone and delete tasks, publish (with and without the publisher role), edit, diff, publish v2, copy, import |
-| 5. Execute a workflow | The runtime API a mobile client uses: validation failures (Java validator, bean validation hook, HTTP validation hook), dependencies that show and hide tasks, a side effect, a sync HTTP webhook and an async bean hook, early submit, submit, edit-after-submit rejection, reset and the archived snapshot |
+| 5. Loan application journey | One loan application, page by page, through the API a mobile client uses: each kind of validation failure, fields that appear for salaried vs self-employed, EMI calculation, co-applicants, document side effects, early submit, consent webhooks, submit webhook, edit-after-submit rejection, reset and the archived snapshot |
 | 6. Media | Local stand-in for signed-URL uploads |
-| 7. Mock services | The webhook receiver and fake validation API that the sample hooks call |
+| 7. Mock services | The webhook receiver and fake verification APIs that the sample hooks call |
 | 8. Utility | Mark tasks as system input, copy tasks between workflows |
 
-Start a fresh execution with "5. Execute a workflow / Start a new asset", which generates a new `assetId`.
+Start a fresh application with "5. Loan application journey / Start a new application", which generates a new `assetId`.
 
-## What the sample workflow exercises
+## The sample workflow: personal loan application
 
-| Task | Feature |
-|---|---|
-| `full_name` | `beanValidationHook` `minLengthValidator` (min 3 chars), `dependencyBean` `answerSummary` |
-| `email` | `httpValidationHook` to `/mock/validate` (rejects values containing "invalid") |
-| `customer_type` | `TASK_VISIBILITY_ACTION`: "Business" shows `company_name` |
-| `contacts_count` | `NUMERIC_TASK_ACTIVATION_ACTION`: activates `contact_1_name` / `contact_2_name` |
-| `id_photo` | Side effect bean `logSideEffect` |
-| `terms` | Sync `httpHook` to `/mock/webhooks/terms-accepted` when completed, async `beanHook` `echoHook` |
-| every task | `NotEmptyAnswerValidator` (Java `AbstractValidator`) |
+`LOAN_APPLICATION` is a five-page loan journey. Each page is a `SECTION` with one `TAB`:
 
-The example beans are in `src/main/java/io/trellis/app/examples`.
+| Page | Tasks | Trellis feature shown |
+|---|---|---|
+| 1. Applicant details | `full_name` | `beanValidationHook` `minLengthValidator` (min 3 characters, set in JSON) |
+| | `mobile_number` | `httpValidationHook` to `/mock/mobile-check` (10 digits starting 6-9; `9999999999` is blocked) |
+| | `pan_number` | `beanValidationHook` `panFormatValidator` (`ABCDE1234F` format) |
+| | `city` | Plain dropdown |
+| 2. Employment & income | `employment_type` | Two `TASK_VISIBILITY_ACTION` rules: "Salaried" shows `employer_name` + `salary_slip`, "Self-employed" shows `business_name` + `bank_statement` |
+| | `monthly_income` | `beanValidationHook` `numberRangeValidator` with min 15,000 (limits in JSON) |
+| 3. Loan requirement | `loan_amount` | Same `numberRangeValidator`, different limits (50,000 to 25,00,000); `dependencyBean` `emiCalculator` |
+| | `tenure_months` | `dependencyBean` `emiCalculator`: once amount and tenure are known, fills `emi_summary` |
+| | `emi_summary` | System task (`isSystemInput`): filled by the server, skipped by the submit check |
+| | `co_applicant_count` | `NUMERIC_TASK_ACTIVATION_ACTION`: "1" shows `co_applicant_1_name`, "2" shows both |
+| 4. Documents | `pan_card_photo`, `selfie`, `salary_slip`, `bank_statement` | Image tasks; each option runs side effect `documentCheck` after saving |
+| 5. Review & consent | `terms_consent` | Sync `httpHook` to `/mock/webhooks/consent-given` (applicant, amount and EMI pulled from other answers) and async `beanHook` `creditCheckRequest` |
+| on submit | | `ApplicationSubmittedListener` posts to `/mock/webhooks/application-submitted` (workflow-level webhook) |
+| every task | | `NotEmptyAnswerValidator` (Java `AbstractValidator`) |
+
+The example beans are in `src/main/java/io/trellis/app/examples`. The EMI uses a flat 14% p.a. reducing-balance rate.
 
 ## MongoDB collections
 

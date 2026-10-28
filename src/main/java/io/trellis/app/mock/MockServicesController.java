@@ -27,6 +27,7 @@ import java.util.Map;
  * Local stand-ins for external systems, so hooks can be tested without anything else running:
  *   POST /mock/webhooks/{channel}  receives httpHook calls; stored in the mock_webhooks collection
  *   GET  /mock/webhooks            lists what arrived
+ *   POST /mock/mobile-check        target for an httpValidationHook: checks a mobile number
  *   POST /mock/validate            target for an httpValidationHook: rejects values containing "invalid"
  */
 @Slf4j
@@ -62,6 +63,21 @@ public class MockServicesController {
     public Map<String, Object> clear() {
         long removed = mongoTemplate.remove(new Query(), COLLECTION).getDeletedCount();
         return Map.of("removed", removed);
+    }
+
+    @PostMapping("/mobile-check")
+    @Operation(summary = "Fake mobile verification for httpValidationHook. Needs 10 digits starting 6-9; 9999999999 is blocked.")
+    public Map<String, Object> mobileCheck(@RequestBody Map<String, Object> body) {
+        String mobile = String.valueOf(body.getOrDefault("mobile", "")).replaceAll("[^0-9]", "");
+        Map<String, Object> response = new LinkedHashMap<>();
+        String problem = !mobile.matches("[6-9][0-9]{9}") ? "Enter a 10-digit mobile number starting with 6-9"
+                : mobile.equals("9999999999") ? "This mobile number is blocked" : null;
+        response.put("success", problem == null);
+        if (problem != null) {
+            response.put("httpStatusCode", 422);
+            response.put("message", problem);
+        }
+        return response;
     }
 
     @PostMapping("/validate")

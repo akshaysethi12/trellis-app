@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Trellis",
-    "description": "Local API collection for the Trellis service.\n\nRun the folders in order (Collection Runner works). Variables are stored on the collection; set baseUrl if the service is not on localhost:8080.\n\n1. Health\n2. Task types\n3. Workflows (read the seeded SAMPLE_ONBOARDING workflow)\n4. Build a workflow (create, edit, publish, version)\n5. Execute a workflow (the runtime API: validation, dependencies, side effects, hooks, submit, reset)\n6. Media, Mock services, Utility",
+    "description": "Local API collection for the Trellis service.\n\nRun the folders in order (Collection Runner works). Variables are stored on the collection; set baseUrl if the service is not on localhost:8080.\n\n1. Health\n2. Task types\n3. Workflows (read the seeded LOAN_APPLICATION workflow)\n4. Build a workflow (create, edit, publish, version)\n5. Loan application journey (the runtime API: validation, dependencies, EMI calculation, side effects, hooks, submit, reset)\n6. Media, Mock services, Utility",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -19,7 +19,7 @@
     },
     {
       "key": "workflowCode",
-      "value": "SAMPLE_ONBOARDING"
+      "value": "LOAN_APPLICATION"
     },
     {
       "key": "workflowId",
@@ -27,7 +27,7 @@
     },
     {
       "key": "assetId",
-      "value": "ASSET-1"
+      "value": "LOAN-1"
     },
     {
       "key": "workflowExecutionId",
@@ -311,7 +311,7 @@
       "name": "3. Workflows (read)",
       "item": [
         {
-          "name": "Latest published SAMPLE_ONBOARDING",
+          "name": "Latest published LOAN_APPLICATION",
           "request": {
             "method": "GET",
             "header": [],
@@ -435,7 +435,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/workflows/{{workflowId}}/tasks/expanded?parentTaskId=profile_tab",
+              "raw": "{{baseUrl}}/workflows/{{workflowId}}/tasks/expanded?parentTaskId=loan_tab",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -448,7 +448,7 @@
               "query": [
                 {
                   "key": "parentTaskId",
-                  "value": "profile_tab"
+                  "value": "loan_tab"
                 }
               ]
             }
@@ -1341,7 +1341,7 @@
           ]
         },
         {
-          "name": "18. Copy SAMPLE_ONBOARDING into a new workflow",
+          "name": "18. Copy LOAN_APPLICATION into a new workflow",
           "request": {
             "method": "POST",
             "header": [
@@ -1368,7 +1368,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Copy of sample onboarding\",\n  \"description\": \"Copied from the seed\",\n  \"tenantId\": \"{{tenantId}}\",\n  \"workflowCode\": \"COPY_{{$timestamp}}\",\n  \"createdBy\": \"{{userEmail}}\"\n}",
+              "raw": "{\n  \"name\": \"Copy of the loan application\",\n  \"description\": \"Copied from the seed\",\n  \"tenantId\": \"{{tenantId}}\",\n  \"workflowCode\": \"COPY_{{$timestamp}}\",\n  \"createdBy\": \"{{userEmail}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1481,13 +1481,22 @@
       "description": "Creates a new workflow code from scratch, publishes it, then edits it and publishes version 2."
     },
     {
-      "name": "5. Execute a workflow",
+      "name": "5. Loan application journey",
       "item": [
         {
-          "name": "Start a new asset (sets assetId)",
+          "name": "Start a new application (sets assetId)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/actuator/health",
               "host": [
@@ -1498,7 +1507,7 @@
                 "health"
               ]
             },
-            "description": "Generates a fresh assetId (one execution = one asset). Run this again to start over."
+            "description": "Generates a fresh assetId (one loan application). Run again to start over."
           },
           "event": [
             {
@@ -1506,8 +1515,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.collectionVariables.set('assetId', 'ASSET-' + Date.now());",
-                  "console.log('assetId =', pm.collectionVariables.get('assetId'));"
+                  "pm.collectionVariables.set('assetId', 'LOAN-' + Date.now());"
                 ]
               }
             },
@@ -1523,7 +1531,7 @@
           ]
         },
         {
-          "name": "Get task tree (creates the execution)",
+          "name": "Open the application (creates it)",
           "request": {
             "method": "POST",
             "header": [
@@ -1582,8 +1590,7 @@
                   "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
                   "const j = pm.response.json();",
                   "pm.collectionVariables.set('workflowExecutionId', j.workflowExecutionId);",
-                  "pm.test('has tasks', () => pm.expect(j.tasksTree.length).to.be.above(0));",
-                  "pm.test('NOT_STARTED or IN_PROGRESS', () => pm.expect(['NOT_STARTED','IN_PROGRESS']).to.include(j.status));"
+                  "pm.test('5 pages', () => pm.expect(j.tasksTree.length).to.eql(5));"
                 ]
               }
             }
@@ -1643,7 +1650,7 @@
           ]
         },
         {
-          "name": "Reject: name too short (beanValidationHook)",
+          "name": "Reject: name too short (minLengthValidator)",
           "request": {
             "method": "PUT",
             "header": [
@@ -1676,59 +1683,6 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"full_name\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"Al\"\n    }\n  }\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 422', () => pm.expect([422]).to.include(pm.response.code));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Reject: email fails external check (httpValidationHook)",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "tenantId",
-                "value": "{{tenantId}}"
-              },
-              {
-                "key": "emailId",
-                "value": "{{userEmail}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "sdk",
-                "workflow",
-                "update"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"email\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"invalid@example.com\"\n    }\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1803,7 +1757,7 @@
           ]
         },
         {
-          "name": "Email",
+          "name": "Reject: blocked mobile (httpValidationHook)",
           "request": {
             "method": "PUT",
             "header": [
@@ -1835,13 +1789,14 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"email\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"asha@example.com\"\n    }\n  }\n}",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"mobile_number\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"9999999999\"\n    }\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
-            }
+            },
+            "description": "The httpValidationHook POSTs to /mock/mobile-check, which stands in for an external verification API."
           },
           "event": [
             {
@@ -1849,14 +1804,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                  "pm.test('status is 422', () => pm.expect([422]).to.include(pm.response.code));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Customer type = Business (shows company_name)",
+          "name": "Mobile number",
           "request": {
             "method": "PUT",
             "header": [
@@ -1888,7 +1843,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"customer_type\",\n  \"capturedValue\": {\n    \"radioButton\": {\n      \"option\": \"Business\"\n    }\n  }\n}",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"mobile_number\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"9876543210\"\n    }\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1903,15 +1858,14 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
-                  "const u = pm.response.json().dependentTaskUpdates.find(t => t.taskId === 'company_name');",
-                  "pm.test('company_name now active', () => pm.expect(u.active).to.eql(true));"
+                  "pm.test('COMPLETED', () => pm.expect(pm.response.json().taskStatus).to.eql('COMPLETED'));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Company name",
+          "name": "Reject: bad PAN format (panFormatValidator)",
           "request": {
             "method": "PUT",
             "header": [
@@ -1943,7 +1897,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"company_name\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"Rao Traders\"\n    }\n  }\n}",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"pan_number\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"ABC123\"\n    }\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1957,7 +1911,61 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                  "pm.test('status is 422', () => pm.expect([422]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PAN",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"pan_number\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"ABCDE1234F\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('COMPLETED', () => pm.expect(pm.response.json().taskStatus).to.eql('COMPLETED'));"
                 ]
               }
             }
@@ -2017,7 +2025,7 @@
           ]
         },
         {
-          "name": "ID photo (runs logSideEffect)",
+          "name": "Employment = Self-employed (shows business fields)",
           "request": {
             "method": "PUT",
             "header": [
@@ -2049,60 +2057,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"id_photo\",\n  \"capturedValue\": {\n    \"image\": [\n      {\n        \"path\": \"trellis/{{assetId}}/id_photo/id_front.jpg\",\n        \"hashKey\": \"id_front\",\n        \"timestamp\": 1793085000000\n      }\n    ]\n  }\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Contacts count = 1 (activates 1 of 2)",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "tenantId",
-                "value": "{{tenantId}}"
-              },
-              {
-                "key": "emailId",
-                "value": "{{userEmail}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "sdk",
-                "workflow",
-                "update"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"contacts_count\",\n  \"capturedValue\": {\n    \"dropdown\": {\n      \"option\": \"1\"\n    }\n  }\n}",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"employment_type\",\n  \"capturedValue\": {\n    \"radioButton\": {\n      \"option\": \"Self-employed\"\n    }\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2117,15 +2072,16 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
-                  "const u = pm.response.json().dependentTaskUpdates;",
-                  "pm.test('contact_1 on, contact_2 off', () => { pm.expect(u.find(t=>t.taskId==='contact_1_name').active).to.eql(true); pm.expect(u.find(t=>t.taskId==='contact_2_name').active).to.eql(false); });"
+                  "pm.test('business_name active=true', () => pm.expect(pm.response.json().dependentTaskUpdates.find(t => t.taskId === 'business_name').active).to.eql(true));",
+                  "pm.test('bank_statement active=true', () => pm.expect(pm.response.json().dependentTaskUpdates.find(t => t.taskId === 'bank_statement').active).to.eql(true));",
+                  "pm.test('employer_name active=false', () => pm.expect(pm.response.json().dependentTaskUpdates.find(t => t.taskId === 'employer_name').active).to.eql(false));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Contact 1 name",
+          "name": "Employment = Salaried (switches the fields)",
           "request": {
             "method": "PUT",
             "header": [
@@ -2157,7 +2113,64 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"contact_1_name\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"Ravi Rao\"\n    }\n  }\n}",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"employment_type\",\n  \"capturedValue\": {\n    \"radioButton\": {\n      \"option\": \"Salaried\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('employer_name active=true', () => pm.expect(pm.response.json().dependentTaskUpdates.find(t => t.taskId === 'employer_name').active).to.eql(true));",
+                  "pm.test('salary_slip active=true', () => pm.expect(pm.response.json().dependentTaskUpdates.find(t => t.taskId === 'salary_slip').active).to.eql(true));",
+                  "pm.test('business_name active=false', () => pm.expect(pm.response.json().dependentTaskUpdates.find(t => t.taskId === 'business_name').active).to.eql(false));",
+                  "pm.test('bank_statement active=false', () => pm.expect(pm.response.json().dependentTaskUpdates.find(t => t.taskId === 'bank_statement').active).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Employer name",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"employer_name\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"Acme Software Pvt Ltd\"\n    }\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2172,6 +2185,599 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject: income too low (numberRangeValidator)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"monthly_income\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"9000\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 422', () => pm.expect([422]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Monthly income",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"monthly_income\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"85000\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('COMPLETED', () => pm.expect(pm.response.json().taskStatus).to.eql('COMPLETED'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Loan purpose",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"loan_purpose\",\n  \"capturedValue\": {\n    \"dropdown\": {\n      \"option\": \"Home renovation\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject: amount too high (numberRangeValidator)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"loan_amount\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"5000000\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 422', () => pm.expect([422]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Loan amount (EMI waits for tenure)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"loan_amount\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"500000\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('COMPLETED', () => pm.expect(pm.response.json().taskStatus).to.eql('COMPLETED'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tenure = 36 months (EMI calculated)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"tenure_months\",\n  \"capturedValue\": {\n    \"dropdown\": {\n      \"option\": \"36 months\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const emi = pm.response.json().dependentTaskUpdates.find(t => t.taskId === 'emi_summary');",
+                  "pm.test('emi_summary filled', () => pm.expect(emi.capturedValue.textBox.value).to.include('EMI Rs'));",
+                  "console.log(emi.capturedValue.textBox.value);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Co-applicants = 1 (activates 1 of 2)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"co_applicant_count\",\n  \"capturedValue\": {\n    \"dropdown\": {\n      \"option\": \"1\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('co_applicant_1_name active=true', () => pm.expect(pm.response.json().dependentTaskUpdates.find(t => t.taskId === 'co_applicant_1_name').active).to.eql(true));",
+                  "pm.test('co_applicant_2_name active=false', () => pm.expect(pm.response.json().dependentTaskUpdates.find(t => t.taskId === 'co_applicant_2_name').active).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Co-applicant 1 name",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"co_applicant_1_name\",\n  \"capturedValue\": {\n    \"textBox\": {\n      \"value\": \"Ravi Rao\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PAN card photo (runs documentCheck side effect)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"pan_card_photo\",\n  \"capturedValue\": {\n    \"image\": [\n      {\n        \"path\": \"trellis/{{assetId}}/pan_card_photo/pan_front.jpg\",\n        \"hashKey\": \"pan_front\",\n        \"timestamp\": 1793085000000\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('COMPLETED', () => pm.expect(pm.response.json().taskStatus).to.eql('COMPLETED'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Selfie",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"selfie\",\n  \"capturedValue\": {\n    \"image\": [\n      {\n        \"path\": \"trellis/{{assetId}}/selfie/selfie.jpg\",\n        \"hashKey\": \"selfie\",\n        \"timestamp\": 1793085000000\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('COMPLETED', () => pm.expect(pm.response.json().taskStatus).to.eql('COMPLETED'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Salary slip",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sdk/workflow/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sdk",
+                "workflow",
+                "update"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"salary_slip\",\n  \"capturedValue\": {\n    \"image\": [\n      {\n        \"path\": \"trellis/{{assetId}}/salary_slip/salary_slip_1.jpg\",\n        \"hashKey\": \"salary_slip_1\",\n        \"timestamp\": 1793085000000\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('COMPLETED', () => pm.expect(pm.response.json().taskStatus).to.eql('COMPLETED'));"
                 ]
               }
             }
@@ -2224,14 +2830,14 @@
                   "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
                   "const j = pm.response.json();",
                   "pm.test('not submitted', () => pm.expect(j.success).to.eql(false));",
-                  "pm.test('terms missing', () => pm.expect(j.incompleteTasks.childTasks.map(t=>t.taskId)).to.include('terms'));"
+                  "pm.test('consent missing', () => pm.expect(j.incompleteTasks.childTasks.map(t => t.taskId)).to.include('terms_consent'));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Accept terms (fires httpHook + async beanHook)",
+          "name": "Consent (fires httpHook + async credit check)",
           "request": {
             "method": "PUT",
             "header": [
@@ -2263,7 +2869,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"terms\",\n  \"capturedValue\": {\n    \"checkbox\": [\n      {\n        \"option\": \"I accept the terms\"\n      }\n    ]\n  }\n}",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"workflowId\": \"{{workflowCode}}\",\n  \"taskId\": \"terms_consent\",\n  \"capturedValue\": {\n    \"checkbox\": [\n      {\n        \"option\": \"I agree to the loan terms and allow a credit bureau check\"\n      }\n    ]\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2277,19 +2883,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('COMPLETED', () => pm.expect(pm.response.json().taskStatus).to.eql('COMPLETED'));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Check the webhook arrived",
+          "name": "Check the consent webhook arrived",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/mock/webhooks?channel=terms-accepted",
+              "raw": "{{baseUrl}}/mock/webhooks?channel=consent-given",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -2300,7 +2916,7 @@
               "query": [
                 {
                   "key": "channel",
-                  "value": "terms-accepted"
+                  "value": "consent-given"
                 }
               ]
             }
@@ -2312,14 +2928,16 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
-                  "pm.test('webhook for this asset', () => pm.expect(pm.response.json().some(w => w.body && w.body.assetId === pm.collectionVariables.get('assetId'))).to.eql(true));"
+                  "const w = pm.response.json().find(w => w.body && w.body.assetId === pm.collectionVariables.get('assetId'));",
+                  "pm.test('webhook for this application', () => pm.expect(w).to.be.an('object'));",
+                  "pm.test('carries the EMI', () => pm.expect(w.body.emiSummary).to.include('EMI Rs'));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Get task tree (with answers)",
+          "name": "Open the application (with answers)",
           "request": {
             "method": "POST",
             "header": [
@@ -2427,6 +3045,50 @@
                 "exec": [
                   "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
                   "pm.test('submitted', () => pm.expect(pm.response.json().success).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Check the submit webhook arrived",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "tenantId",
+                "value": "{{tenantId}}"
+              },
+              {
+                "key": "emailId",
+                "value": "{{userEmail}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mock/webhooks?channel=application-submitted",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mock",
+                "webhooks"
+              ],
+              "query": [
+                {
+                  "key": "channel",
+                  "value": "application-submitted"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('webhook for this application', () => pm.expect(pm.response.json().some(w => w.body && w.body.assetId === pm.collectionVariables.get('assetId'))).to.eql(true));"
                 ]
               }
             }
@@ -2590,59 +3252,9 @@
               }
             }
           ]
-        },
-        {
-          "name": "Get task tree (GET variant)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "tenantId",
-                "value": "{{tenantId}}"
-              },
-              {
-                "key": "emailId",
-                "value": "{{userEmail}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/sdk/workflow/full-hierarchy?assetId={{assetId}}&workflowId={{workflowCode}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "sdk",
-                "workflow",
-                "full-hierarchy"
-              ],
-              "query": [
-                {
-                  "key": "assetId",
-                  "value": "{{assetId}}"
-                },
-                {
-                  "key": "workflowId",
-                  "value": "{{workflowCode}}"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.expect([200]).to.include(pm.response.code));"
-                ]
-              }
-            }
-          ]
         }
       ],
-      "description": "Runs one asset through SAMPLE_ONBOARDING. Uses the same endpoints a mobile client calls."
+      "description": "Runs one personal loan application through LOAN_APPLICATION, page by page, using the same endpoints a mobile client calls."
     },
     {
       "name": "6. Media",
@@ -2671,7 +3283,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"taskId\": \"id_photo\",\n  \"hashKey\": \"id_front\",\n  \"fileName\": \"id_front.jpg\"\n}",
+              "raw": "{\n  \"assetId\": \"{{assetId}}\",\n  \"taskId\": \"pan_card_photo\",\n  \"hashKey\": \"pan_front\",\n  \"fileName\": \"pan_front.jpg\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

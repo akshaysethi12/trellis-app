@@ -42,7 +42,15 @@ public class DependentTaskUpdates {
         });
         context.setCapturedTaskData(workFlowClientService.saveCapturedData(data));
 
-        List<String> ids = List.copyOf(activeByTaskId.keySet());
+        report(context, List.copyOf(activeByTaskId.keySet()));
+    }
+
+    /**
+     * Adds the current state of these tasks to the response's dependentTaskUpdates, so the client can re-render them.
+     * Call after saving captured data.
+     */
+    public void report(TrellisTaskContext context, List<String> ids) {
+        CapturedTaskData data = context.getCapturedTaskData();
         Map<String, WorkFlowTask> blueprint = workFlowClientService.fetchWorkflowTasks(context.getWorkflowId(), ids)
                 .stream().collect(Collectors.toMap(WorkFlowTask::getTaskId, Function.identity()));
         for (String taskId : ids) {
